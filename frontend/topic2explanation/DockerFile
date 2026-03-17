@@ -1,0 +1,16 @@
+# Frontend Dockerfile (Next.js)
+FROM node:18-slim
+
+WORKDIR /app
+
+# Install dependencies separately to leverage Docker cache
+COPY frontend/topic2explanation/package*.json ./
+
+RUN npm install --legacy-peer-deps
+
+# Copy frontend code
+COPY frontend/topic2explanation . 
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

@@ -1,0 +1,9 @@
+[build]
+  base = "frontend/topic2explanation"     # Use only the frontend folder
+  command = "npm install && npm run build"
+  publish = "frontend/topic2explanation/.next"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

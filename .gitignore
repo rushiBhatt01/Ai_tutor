@@ -56,12 +56,12 @@ backend/__pycache__/
 # Generated output folders (timestamp-based)
 backend/2025_*/
 backend/2026_*/
-backend/prev_videos/
+
 backend/images/
-backend/characters/
+
 backend/checkpoints/
 backend/gfpgan/
-backend/functions/
+
 backend/.venv
 backend/__pycache__/
 

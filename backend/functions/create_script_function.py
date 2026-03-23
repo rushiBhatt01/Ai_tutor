@@ -35,9 +35,10 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
     )
 
     # Pick a random API key
-    api_keys = json.load(open("apikeys.json", "r"))["api_keys"]
-    selected_key = random.choice(api_keys)
-
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+    selected_key = os.environ.get("COHERE_API_KEY")
     co = cohere.ClientV2(selected_key)  # Use ClientV2 for the new API style
 
     prompt_content = (

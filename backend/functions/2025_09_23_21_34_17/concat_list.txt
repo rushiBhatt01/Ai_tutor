@@ -1,6 +1,0 @@
-file 'C:\Users\Rushi\OneDrive\Desktop\FILES\project\API-BASED-Video-Tutorial-Generator\BACKEND\functions\2025_09_23_21_34_17\temp_0.mp4'
-file 'C:\Users\Rushi\OneDrive\Desktop\FILES\project\API-BASED-Video-Tutorial-Generator\BACKEND\functions\2025_09_23_21_34_17\temp_1.mp4'
-file 'C:\Users\Rushi\OneDrive\Desktop\FILES\project\API-BASED-Video-Tutorial-Generator\BACKEND\functions\2025_09_23_21_34_17\temp_2.mp4'
-file 'C:\Users\Rushi\OneDrive\Desktop\FILES\project\API-BASED-Video-Tutorial-Generator\BACKEND\functions\2025_09_23_21_34_17\temp_3.mp4'
-file 'C:\Users\Rushi\OneDrive\Desktop\FILES\project\API-BASED-Video-Tutorial-Generator\BACKEND\functions\2025_09_23_21_34_17\temp_4.mp4'
-file 'C:\Users\Rushi\OneDrive\Desktop\FILES\project\API-BASED-Video-Tutorial-Generator\BACKEND\functions\2025_09_23_21_34_17\temp_5.mp4'

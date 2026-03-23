@@ -7,8 +7,10 @@ def generate_image_queries(topic_name, chunks):
     Use Cohere to extract highly specific, 2-5 word visual search queries based on the chunks.
     """
     try:
-        api_keys = json.load(open("apikeys.json", "r"))["api_keys"]
-        selected_key = random.choice(api_keys)
+        import os
+        from dotenv import load_dotenv
+        load_dotenv()
+        selected_key = os.environ.get("COHERE_API_KEY")
         co = cohere.ClientV2(selected_key)
         
         prompt = (
@@ -28,8 +30,8 @@ def generate_image_queries(topic_name, chunks):
             max_tokens=200
         )
         
-        text = response.message.content[0].text
-        queries = [q.strip().strip("-").strip(".").strip("\"").strip("'").strip() for q in text.split("\n") if q.strip()]
+        text: str = str(response.message.content[0].text)
+        queries: list[str] = [str(q).strip().strip("-").strip(".").strip("\"").strip("'").strip() for q in text.split("\n") if str(q).strip()]
         
         # Ensure we always have enough queries
         while len(queries) < len(chunks):

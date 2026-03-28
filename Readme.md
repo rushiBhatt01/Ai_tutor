@@ -48,7 +48,7 @@ This AI tool helps you create captivating and informative AI-generated video tut
       <td></td>
     </tr>
     <tr>
-      <td width="50%" valign="middle"><video src="demo.mp4" width="100%"></td>
+      <td width="50%" valign="middle"><video src="demo.mp4" width="100%" controls></video></td>
     </tr>
   </table>
 </div>

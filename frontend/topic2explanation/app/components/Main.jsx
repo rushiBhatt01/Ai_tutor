@@ -98,7 +98,7 @@ export default function Main() {
             </svg>
             <span className="studio-main-backend-tooltip">
               <div className="studio-tooltip-content">
-                <p>Backend service is currently offline (requires higher system specs) So New Generation won't be working. Only demo Generated videos available.</p>
+                <p>Backend service is currently offline (requires higher system specs) So New Generation won&apos;t be working. Only demo Generated videos available.</p>
                 <button type="button" className="studio-quick-demo-btn" onClick={handleQuickDemo}>
                   🎲 Quick Demo
                 </button>

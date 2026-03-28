@@ -31,7 +31,7 @@ function AccordionSection({ title, icon, defaultOpen = true, children }) {
     if (open && contentRef.current && !isAnimating) {
       setHeight(`${contentRef.current.scrollHeight}px`);
     }
-  });
+  }, [open, isAnimating]);
 
   return (
     <div className={`accordion-section ${open ? "open" : ""}`}>

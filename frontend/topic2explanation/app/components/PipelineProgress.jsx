@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-const PIPELINE_STEPS = [
-  { id: "script", label: "Generating script", icon: "📜", duration: 8000 },
-  { id: "voice", label: "Synthesizing voice", icon: "🎙️", duration: 6000 },
-  { id: "visuals", label: "Fetching visuals", icon: "🖼️", duration: 5000 },
-  { id: "animation", label: "Animating instructor", icon: "🎭", duration: 10000 },
-  { id: "render", label: "Composing final video", icon: "🎬", duration: 4000 },
+export const PIPELINE_STEPS = [
+  { id: "script", label: "Generating script", icon: "📜", duration: 1000 },
+  { id: "voice", label: "Synthesizing voice", icon: "🎙️", duration: 4000 },
+  { id: "visuals", label: "Fetching visuals", icon: "🖼️", duration: 2000 },
+  { id: "animation", label: "Animating instructor", icon: "🎭", duration: 2000 },
+  { id: "render", label: "Composing final video", icon: "🎬", duration: 1000 },
 ];
 
 export default function PipelineProgress({ active }) {

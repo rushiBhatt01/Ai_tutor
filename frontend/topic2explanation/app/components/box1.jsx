@@ -95,6 +95,8 @@ export default function Box1(props) {
         </div>
       )}
 
+
+
       {/* ─── Pipeline progress ─── */}
       <PipelineProgress active={props.loading} />
 

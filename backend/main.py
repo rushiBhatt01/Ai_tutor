@@ -5,6 +5,12 @@ from fastapi.responses import StreamingResponse
 from functions.video_main_function import video_main
 from media_store import stream_chunks
 from bson import ObjectId
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from backend/.env at startup
+base_dir = os.path.dirname(__file__)
+load_dotenv(os.path.join(base_dir, ".env"))
 
 app = FastAPI()
 security = HTTPBasic()
@@ -28,7 +34,9 @@ async def create_insights(request: Request, credentials: HTTPBasicCredentials = 
     creative = data['creative']
     humour = data['humour']
     characterName = data['characterName']
-    file_id = await video_main(message, level, age, creative, humour, characterName)
+    # Optional pipeline delay (ms) sent by frontend: sum of pipeline durations + buffer
+    pipeline_delay_ms = data.get("pipelineDelayMs")
+    file_id = await video_main(message, level, age, creative, humour, characterName, pipeline_delay_ms)
     
     headers = {
         "Content-Disposition": f"inline; filename={message}.mp4"
@@ -48,3 +56,26 @@ async def create_insights(request: Request, credentials: HTTPBasicCredentials = 
             yield chunk
 
     return StreamingResponse(generator(), media_type="video/mp4", headers=headers)
+
+
+@app.get("/checkVideoCache/{topic_name}")
+async def check_video_cache(topic_name: str):
+    """
+    Check if a cached video exists for the given topic in frontend/public/prev_videos
+    Returns: {exists: bool, filename: str}
+    """
+    try:
+        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/topic2explanation/public/prev_videos"))
+        file_path = os.path.join(frontend_cache_dir, f"{topic_name}.mp4")
+        exists = os.path.exists(file_path)
+        return {
+            "exists": exists,
+            "filename": f"{topic_name}.mp4" if exists else None,
+            "path": file_path if exists else None
+        }
+    except Exception as e:
+        print(f"Error checking cache for topic '{topic_name}': {e}")
+        return {
+            "exists": False,
+            "error": str(e)
+        }

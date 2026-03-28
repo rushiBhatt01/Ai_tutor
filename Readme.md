@@ -42,7 +42,15 @@ This AI tool helps you create captivating and informative AI-generated video tut
 ## ✨ Demo
 
 <div align="center">
-  <video src="https://github.com/AkshitIreddy/AI-Powered-Video-Tutorial-Generator/assets/90443032/0a1fb05a-8290-4391-b329-96f04dcae7a1" width="100%" controls></video>
+  <table>
+    <tr>
+      <td align="center"><b>The Interface</b></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td width="50%" valign="middle"><video src="demo.mp4" width="100%"></td>
+    </tr>
+  </table>
 </div>
 
 ---

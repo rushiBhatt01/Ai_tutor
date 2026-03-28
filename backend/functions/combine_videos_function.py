@@ -1,6 +1,7 @@
 import os
 import subprocess
 import random
+import asyncio
 import shutil
 import json
 from bson import ObjectId
@@ -50,7 +51,7 @@ def ensure_16_9(video_path, resolution="1280x720"):
         print(f"✅ Aspect ratio OK for {video_path} (AR={aspect_ratio:.2f})")
         return video_path
 
-async def combine_videos(timestamp, topic_name):
+async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
     print("Combining videos with FFmpeg...")
 
     video1_folder = f"{timestamp}/video"
@@ -69,36 +70,21 @@ async def combine_videos(timestamp, topic_name):
         v2_path = os.path.join(video2_folder, video2_files[i])
         out_path = f"{timestamp}/temp_{i}.mp4"
 
-        scenario = random.randint(1, 4)
-
-        if scenario in [1, 2]:
-            # Side-by-side
-            subprocess.run([
-                "ffmpeg", "-y",
-                "-i", v1_path, "-i", v2_path,
-                "-filter_complex",
-                "[0:v]scale=640:720:force_original_aspect_ratio=increase,crop=640:720[v0];"
-                "[1:v]scale=640:720:force_original_aspect_ratio=increase,crop=640:720[v1];" +
-                ("[v0][v1]hstack=inputs=2[v]" if scenario == 1 else "[v1][v0]hstack=inputs=2[v]"),
-                "-map", "[v]", "-map", "0:a",  # only audio from first video
-                "-c:v", "libx264", "-c:a", "aac",
-                "-shortest", out_path
-            ], check=True)
-
-        elif scenario in [3, 4]:
-            # Overlay
-            overlay_pos = "x=0:y=H-h" if scenario == 3 else "x=W-w-10:y=H-h"
-            subprocess.run([
-                "ffmpeg", "-y",
-                "-i", v2_path, "-i", v1_path,  # big first, small second
-                "-filter_complex",
-                "[0:v]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720[bg];"
-                "[1:v]scale=320:360:force_original_aspect_ratio=increase,crop=320:360[fg];" +
-                f"[bg][fg]overlay={overlay_pos}[v]",
-                "-map", "[v]", "-map", "1:a",  # only audio from video1 (second input here)
-                "-c:v", "libx264", "-c:a", "aac",
-                "-shortest", out_path
-            ], check=True)
+        # Always use overlay placement for the character/video instead of side-by-side.
+        # Keep a small foreground (character) over the main background image video.
+        scenario = random.choice([3, 4])
+        overlay_pos = "x=0:y=H-h" if scenario == 3 else "x=W-w-10:y=H-h"
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-i", v2_path, "-i", v1_path,  # big first, small second
+            "-filter_complex",
+            "[0:v]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720[bg];"
+            "[1:v]scale=320:360:force_original_aspect_ratio=increase,crop=320:360[fg];" +
+            f"[bg][fg]overlay={overlay_pos}[v]",
+            "-map", "[v]", "-map", "1:a",  # only audio from video1 (second input here)
+            "-c:v", "libx264", "-c:a", "aac",
+            "-shortest", out_path
+        ], check=True)
 
         # Ensure each output clip is 16:9 (only if too wide)
         fixed_clip = ensure_16_9(out_path, resolution="1280x720")
@@ -117,19 +103,43 @@ async def combine_videos(timestamp, topic_name):
         "-i", concat_list_path,
         "-c", "copy", final_video_path
     ], check=True)
-    env = os.getenv("ENVIRONMENT", "production")
+    env = os.getenv("ENVIRONMENT", "local")
+    # Delay (in seconds) before making the cache entry visible to frontend
+    if override_delay_seconds is not None:
+        try:
+            delay_seconds = int(override_delay_seconds)
+        except Exception:
+            delay_seconds = int(os.getenv("CACHE_POST_DELAY", "3"))
+    else:
+        delay_seconds = int(os.getenv("CACHE_POST_DELAY", "3"))
     if env == "local":
-        os.makedirs("prev_videos", exist_ok=True)
-        local_path = f"prev_videos/{topic_name}.mp4"
-        shutil.copyfile(final_video_path, local_path)
-        print("🎬 Final video stored LOCALLY:", local_path)
-        return f"local:{local_path}"
+        # Save to frontend's public/prev_videos folder
+        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/topic2explanation/public/prev_videos"))
+        os.makedirs(frontend_cache_dir, exist_ok=True)
+        temp_name = f".{topic_name}.tmp.mp4"
+        temp_path = os.path.join(frontend_cache_dir, temp_name)
+        final_dest = os.path.join(frontend_cache_dir, f"{topic_name}.mp4")
+        shutil.copyfile(final_video_path, temp_path)
+        temp_abs = os.path.abspath(temp_path)
+        print("🎬 Final video copied to temp location:", temp_abs)
+        if delay_seconds > 0:
+            print(f"Waiting {delay_seconds}s before exposing cached video...")
+            await asyncio.sleep(delay_seconds)
+        # Move temp file to final destination atomically
+        os.replace(temp_path, final_dest)
+        final_abs = os.path.abspath(final_dest)
+        print("🎬 Cached video now exposed at:", final_abs)
+        return f"local:{final_abs}"
     else:
         file_id: ObjectId = await upload_file(
             final_video_path,
             filename=f"{topic_name}.mp4",
             metadata={"type": "final_video", "topic": topic_name, "timestamp": timestamp},
         )
+        # Wait a short period to ensure storage/backends have completed processing
+        if delay_seconds > 0:
+            print(f"Waiting {delay_seconds}s before writing DB cache entry...")
+            await asyncio.sleep(delay_seconds)
         await set_cached_video(topic_name, file_id)
         print("🎬 Final video stored in DB:", str(file_id))
         return file_id

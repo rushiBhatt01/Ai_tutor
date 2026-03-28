@@ -3,7 +3,7 @@ import cohere
 import json
 import random
 
-def create_script(topic_name, level_of_explanation, age, creativity_level, humour_level):
+def create_script(topic_name, level_of_explanation, age, creativity_level, humour_level , character_name):
     age = str(age)
 
     # Define explanation strings
@@ -42,18 +42,22 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
     co = cohere.ClientV2(selected_key)  # Use ClientV2 for the new API style
 
     prompt_content = (
-        f"Instructions:\n"
-        f"elaborate about {topic_name} such that a {age}-year-old can understand. "
-        f"Explain the key concepts. {level_string} {creativity_string} {humour_string} "
-        f"It should be in first person. Be Creative and happy while explaining"
-        f"There should be accurate information in 100 words without repeating prompt or using special characters like * or ,."
-    )
-
+    f"Instructions:\n"
+    f"Explain {topic_name} in a way that a {age}-year-old can easily understand. "
+    f"Use simple language and clear examples to describe the key concepts. "
+    f"{level_string} {creativity_string} {humour_string} "
+    f"Write in first person with a friendly and engaging tone. "
+    f"Maintain a happy and creative style throughout the explanation. "
+    f"Ensure the explanation is accurate and informative. "
+    f"Limit the response to approximately 200 words. "
+    f"Avoid repeating the instructions or using special characters such as asterisk or symbols. "
+    f"End with a formal closing sentence suitable for a script with Sincerely, {character_name}."
+)
     response = co.chat(
         model="command-a-03-2025",  # or whichever latest model you prefer
         messages=[{"role": "user", "content": prompt_content}],
         temperature=0.4,
-        max_tokens=120
+        max_tokens=350
     )
 
     # Extract the generated text

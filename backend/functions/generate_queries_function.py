@@ -15,8 +15,8 @@ def generate_image_queries(topic_name, chunks):
         
         prompt = (
             f"You are an expert visual director for a video about '{topic_name}'. "
-            f"I have {len(chunks)} chunks of a script. For each chunk, provide EXACTLY ONE highly descriptive, "
-            f"2-5 word image search query that perfectly visually represents the chunk without using quotes, prefixes, special characters or bullet points.\n\n"
+            f"I have {len(chunks)} chunks of a script. For each chunk, provide image in jpeg or png format and relate to the {topic_name} "
+            f"5-8 word image search query that perfectly visually represents the chunk without using quotes, prefixes, special characters or bullet points.\n\n"
         )
         for i, c in enumerate(chunks):
             prompt += f"[Chunk {i+1}]: {c}\n"

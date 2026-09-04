@@ -111,15 +111,7 @@ export default function Box1(props) {
               src={props.videoUrl}
               controls
               className="studio-video"
-            >
-              <track
-                src="/captions/tutorial-en.vtt"
-                kind="subtitles"
-                srcLang="en"
-                label="English"
-                default
-              />
-            </video>
+            />
             <button
               className="studio-fullscreen-btn"
               onClick={openFullscreen}
@@ -185,9 +177,7 @@ export default function Box1(props) {
             autoPlay
             className="studio-fullscreen-video"
             onClick={(e) => e.stopPropagation()}
-          >
-            <track src="/captions/tutorial-en.vtt" kind="subtitles" srcLang="en" label="English" default />
-          </video>
+          />
         </div>
       )}
     </div>

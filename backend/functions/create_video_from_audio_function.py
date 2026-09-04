@@ -1,78 +1,77 @@
 import os
 import shutil
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+if sys.stdout.encoding.lower() != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
 
 MAX_WORKERS = 1
 executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
 def process_single_audio(audio_file: str, timestamp: str, character_name: str) -> str:
-    audio_path = f"{timestamp}/audio/{audio_file}"
-    img_path = f"characters/{character_name}.png"
-    video_output_dir = f"{timestamp}/video"
-    temp_output_dir = f"{timestamp}/video_temp"
+    audio_path = os.path.join(timestamp, "audio", audio_file)
+    
+    # Support png, jpg, jpeg extensions for character image
+    img_path = None
+    for ext in [".png", ".jpg", ".jpeg"]:
+        candidate = os.path.join("characters", f"{character_name}{ext}")
+        if os.path.exists(candidate):
+            img_path = candidate
+            break
+            
+    if not img_path:
+        # Fallback to Sophia.png if character image not found
+        img_path = os.path.join("characters", "Sophia.png")
 
+    video_output_dir = os.path.join(timestamp, "video")
     os.makedirs(video_output_dir, exist_ok=True)
-    os.makedirs(temp_output_dir, exist_ok=True)
 
-    job_output_path = os.path.join(temp_output_dir, f"{audio_file.split('.')[0]}_job")
-    os.makedirs(job_output_path, exist_ok=True)
+    final_output_file = os.path.join(video_output_dir, f"{os.path.splitext(audio_file)[0]}.mp4")
 
-    final_output_file = os.path.join(video_output_dir, f"{audio_file.split('.')[0]}.mp4")
+    # Command using Wav2Lip inference
+    python_exe = sys.executable
+    checkpoint_path = os.path.join("Wav2Lip", "checkpoints", "wav2lip_gan.pth")
+    if not os.path.exists(checkpoint_path):
+        checkpoint_path = os.path.join("Wav2Lip", "checkpoints", "wav2lip.pth")
 
-    linux_activate = "SadTalker/venv/bin/activate"
-    win_activate = "SadTalker\\venv\\Scripts\\activate"
-    if os.path.exists(linux_activate):
-        activate_env_cmd = f". {linux_activate}"
-    elif os.path.exists(win_activate):
-        activate_env_cmd = win_activate
-    else:
-        activate_env_cmd = None
+    wav2lip_script = os.path.join("Wav2Lip", "inference.py")
 
-    if activate_env_cmd:
-        command = (
-            f"{activate_env_cmd} && "
-            f"python ./SadTalker/inference.py "
-            f"--driven_audio {audio_path} "
-            f"--source_image {img_path} "
-            f"--result_dir {job_output_path} "
-            f"--still --preprocess full --facerender pirender"
-        )
-    else:
-        command = (
-            f"python ./SadTalker/inference.py "
-            f"--driven_audio {audio_path} "
-            f"--source_image {img_path} "
-            f"--result_dir {job_output_path} "
-            f"--still --preprocess full --facerender pirender"
-        )
+    command = [
+        python_exe,
+        wav2lip_script,
+        "--checkpoint_path", checkpoint_path,
+        "--face", img_path,
+        "--audio", audio_path,
+        "--outfile", final_output_file,
+        "--nosmooth"
+    ]
 
     try:
-        subprocess.run(command, shell=True, check=True, timeout=600)
+        print(f"[Wav2Lip] Starting lip sync for {audio_file} using {img_path}...")
+        res = subprocess.run(command, check=True, timeout=600, capture_output=True, text=True)
+        if res.stdout:
+            print(res.stdout)
 
-        # find generated video
-        generated_video = None
-        for root, _, files in os.walk(job_output_path):
-            for f in files:
-                if f.endswith(".mp4") and "full" in f:
-                    generated_video = os.path.join(root, f)
-                    break
-            if generated_video:
-                break
+        if not os.path.exists(final_output_file):
+            raise FileNotFoundError(f"No video generated at {final_output_file} for {audio_file}")
 
-        if not generated_video:
-            raise FileNotFoundError(f"No video generated for {audio_file}")
+        return f"[Wav2Lip OK] {audio_file} -> {final_output_file}"
 
-        shutil.move(generated_video, final_output_file)
-
-        return f"✅ {audio_file} → {final_output_file}"
-
-    finally:
-        shutil.rmtree(job_output_path, ignore_errors=True)
+    except subprocess.CalledProcessError as e:
+        print(f"[Wav2Lip ERROR] Execution failed for {audio_file}: {e.stderr}")
+        raise RuntimeError(f"Wav2Lip generation failed: {e.stderr}")
+    except Exception as e:
+        print(f"[Wav2Lip ERROR] {e}")
+        raise RuntimeError(f"Video generation failed: {e}")
 
 def create_video_from_audio(timestamp: str, character_name: str):
-    audio_folder = f"{timestamp}/audio"
-    audio_files = os.listdir(audio_folder)
+    audio_folder = os.path.join(timestamp, "audio")
+    audio_files = [f for f in os.listdir(audio_folder) if f.endswith(('.wav', '.mp3'))]
 
     futures = []
     for audio_file in audio_files:
@@ -85,7 +84,7 @@ def create_video_from_audio(timestamp: str, character_name: str):
         try:
             results.append(future.result())
         except Exception as e:
-            print(f"❌ SadTalker Error: {e}")
+            print(f"[Wav2Lip ERROR] Video generation failed: {e}")
             raise RuntimeError(f"Video generation failed: {e}")
 
     print(f"All jobs done. Videos saved in {timestamp}/video")

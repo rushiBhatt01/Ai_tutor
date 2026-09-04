@@ -65,15 +65,23 @@ backend/gfpgan/
 backend/.venv
 backend/__pycache__/
 
-# Large model files in SadTalker
-backend/SadTalker/checkpoints/
-backend/checkpoints/
-backend/SadTalker/req.txt
-backend/SadTalker/requirements.txt
-backend/SadTalker/venv/
-backend/SadTalker/__pycache__/
-backend/SadTalker/requirements3d.txt 
-backend/SadTalker/docs   
+# SadTalker (completely ignored on wave2lip-integration branch)
+backend/SadTalker/
+SadTalker/
+
+# Wav2Lip checkpoints & model weights
+backend/Wav2Lip/checkpoints/
+Wav2Lip/checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.onnx
+
+# Generated output & temp video folders
+backend/temp/
+backend/prev_videos/
+frontend/topic2explanation/public/prev_videos/
+
 # Logs
 *.log
 npm-debug.log*

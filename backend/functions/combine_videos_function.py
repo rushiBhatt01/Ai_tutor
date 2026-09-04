@@ -131,15 +131,25 @@ async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
         print("🎬 Cached video now exposed at:", final_abs)
         return f"local:{final_abs}"
     else:
-        file_id: ObjectId = await upload_file(
+        file_id = await upload_file(
             final_video_path,
             filename=f"{topic_name}.mp4",
             metadata={"type": "final_video", "topic": topic_name, "timestamp": timestamp},
         )
-        # Wait a short period to ensure storage/backends have completed processing
-        if delay_seconds > 0:
-            print(f"Waiting {delay_seconds}s before writing DB cache entry...")
-            await asyncio.sleep(delay_seconds)
-        await set_cached_video(topic_name, file_id)
-        print("🎬 Final video stored in DB:", str(file_id))
-        return file_id
+        if file_id is not None:
+            # Wait a short period to ensure storage/backends have completed processing
+            if delay_seconds > 0:
+                print(f"Waiting {delay_seconds}s before writing DB cache entry...")
+                await asyncio.sleep(delay_seconds)
+            await set_cached_video(topic_name, file_id)
+            print("🎬 Final video stored in DB:", str(file_id))
+            return file_id
+        
+        # Fallback to local storage if MongoDB is unavailable
+        print("⚠️ MongoDB upload returned None, falling back to local file response.")
+        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/topic2explanation/public/prev_videos"))
+        os.makedirs(frontend_cache_dir, exist_ok=True)
+        final_dest = os.path.join(frontend_cache_dir, f"{topic_name}.mp4")
+        shutil.copyfile(final_video_path, final_dest)
+        return f"local:{os.path.abspath(final_dest)}"
+

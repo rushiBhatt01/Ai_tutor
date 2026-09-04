@@ -33,7 +33,7 @@ async def video_main(topic_name, level_of_explanation, age, creativity_level, hu
         return f"local:{prev_videos_path}"
 
     # If not present locally, check DB cache (production) or local prev_videos (legacy local env)
-    env = os.getenv("ENVIRONMENT", "production")
+    env = os.getenv("ENVIRONMENT", "local")
     if env == "local":
         # legacy behaviour: also check ../../frontend/topic2explanation/public/prev_videos path
         local_path = f"../../frontend/topic2explanation/public/prev_videos/{topic_name}.mp4"
@@ -76,7 +76,7 @@ async def video_main(topic_name, level_of_explanation, age, creativity_level, hu
     create_image_videos(timestamp)
 
     # Persist images to DB (optional, keeps local copies for ffmpeg)
-    env = os.getenv("ENVIRONMENT", "production")
+    env = os.getenv("ENVIRONMENT", "local")
     if env != "local":
         images_dir = f"{timestamp}/images"
         for fname in sorted(os.listdir(images_dir)):

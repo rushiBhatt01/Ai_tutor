@@ -4,25 +4,37 @@ from bson import ObjectId
 from db import get_bucket, get_db
 
 
-async def upload_file(path: str, filename: Optional[str] = None, metadata: Optional[Dict] = None) -> ObjectId:
-    bucket = get_bucket()
-    fname = filename or os.path.basename(path)
-    meta = metadata or {}
-    with open(path, "rb") as f:
-        file_id = await bucket.upload_from_stream(fname, f, metadata=meta)
-    return file_id
+async def upload_file(path: str, filename: Optional[str] = None, metadata: Optional[Dict] = None) -> Optional[ObjectId]:
+    try:
+        bucket = get_bucket()
+        fname = filename or os.path.basename(path)
+        meta = metadata or {}
+        with open(path, "rb") as f:
+            file_id = await bucket.upload_from_stream(fname, f, metadata=meta)
+        return file_id
+    except Exception as e:
+        print(f"⚠️ Mongo DB upload_file failed: {e}")
+        return None
 
 
-async def upload_bytes(data: bytes, filename: str, metadata: Optional[Dict] = None) -> ObjectId:
-    bucket = get_bucket()
-    meta = metadata or {}
-    file_id = await bucket.upload_from_stream(filename, data, metadata=meta)
-    return file_id
+async def upload_bytes(data: bytes, filename: str, metadata: Optional[Dict] = None) -> Optional[ObjectId]:
+    try:
+        bucket = get_bucket()
+        meta = metadata or {}
+        file_id = await bucket.upload_from_stream(filename, data, metadata=meta)
+        return file_id
+    except Exception as e:
+        print(f"⚠️ Mongo DB upload_bytes failed: {e}")
+        return None
 
 
 async def list_files_by_meta(query: Dict):
-    db = get_db()
-    return db.fs.files.find(query)
+    try:
+        db = get_db()
+        return db.fs.files.find(query)
+    except Exception as e:
+        print(f"⚠️ Mongo DB list_files_by_meta failed: {e}")
+        return []
 
 
 async def open_download_stream(file_id: ObjectId):
@@ -37,3 +49,4 @@ async def stream_chunks(file_id: ObjectId, chunk_size: int = 1024 * 256):
         if not chunk:
             break
         yield chunk
+

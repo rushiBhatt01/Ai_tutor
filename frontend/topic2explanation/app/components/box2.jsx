@@ -158,6 +158,33 @@ function StudioSlider({ label, icon, value, min, max, onChange }) {
   );
 }
 
+/* ── Custom toggle switch ────────────────────────────────── */
+function StudioToggle({ label, icon, checked, onChange }) {
+  return (
+    <div className="studio-control-group flex items-center justify-between py-1">
+      <label className="studio-control-label flex items-center gap-2 cursor-pointer">
+        <span>{icon}</span>
+        <span>{label}</span>
+      </label>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+          checked ? "bg-cyan-500" : "bg-gray-700"
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+            checked ? "translate-x-6" : "translate-x-1"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
 /* ── Character preview ──────────────────────────────────── */
 function CharacterPreview({ characterName }) {
   const character = CHARACTERS.find((c) => c.name === characterName) || CHARACTERS[0];
@@ -212,6 +239,12 @@ export default function Box2(props) {
             value={props.level}
             options={LEVELS}
             onChange={props.setLevel}
+          />
+          <StudioToggle
+            label="Subtitles Overlay"
+            icon="💬"
+            checked={Boolean(props.enableSubtitles)}
+            onChange={props.setEnableSubtitles || (() => {})}
           />
         </AccordionSection>
 

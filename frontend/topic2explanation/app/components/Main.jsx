@@ -8,13 +8,18 @@ import VideoHistory from "./VideoHistory";
 import { generateOutput } from "./generateoutput";
 import { DEMO_TOPICS } from "../utils/demoTopics";
 
+import PipelineRecovery from "./PipelineRecovery";
+import DevModuleConsole from "./DevModuleConsole";
+
 export default function Main() {
+  const [activeTab, setActiveTab] = useState("studio"); // "studio" | "recovery" | "sandbox"
   const [message, setMessage] = useState("");
   const [level, setLevel] = useState("beginner");
   const [age, setAge] = useState(18);
   const [creative, setCreative] = useState(8);
   const [humour, setHumour] = useState(6);
   const [characterName, setCharacterName] = useState("Benjamin");
+  const [enableSubtitles, setEnableSubtitles] = useState(false);
   const [loading, setLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
 
@@ -29,14 +34,15 @@ export default function Main() {
           humour,
           characterName,
           setLoading,
-          setVideoUrl
+          setVideoUrl,
+          enableSubtitles
         );
       } catch (error) {
         console.error("Error in generateOutput:", error);
         setLoading(false);
       }
     }
-  }, [age, characterName, creative, humour, level, loading, message]);
+  }, [age, characterName, creative, enableSubtitles, humour, level, loading, message]);
 
   // Show info tooltip on page load
   useEffect(() => {
@@ -44,7 +50,6 @@ export default function Main() {
       const infoIcon = document.querySelector('.studio-main-backend-status-icon');
       if (infoIcon) {
         infoIcon.setAttribute('data-show-tooltip', 'true');
-        // Auto-hide tooltip after 8 seconds
         setTimeout(() => {
           infoIcon.removeAttribute('data-show-tooltip');
         }, 8000);
@@ -75,7 +80,46 @@ export default function Main() {
   };
 
   return (
-    <div className="studio-layout">
+    <div className="space-y-6">
+      {/* View Switcher Navigation Bar */}
+      <div className="flex justify-center gap-3 px-4">
+        <button
+          onClick={() => setActiveTab("studio")}
+          className={`px-5 py-2.5 rounded-full font-semibold text-sm transition ${
+            activeTab === "studio"
+              ? "bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/25"
+              : "bg-slate-800/80 text-slate-300 hover:text-white"
+          }`}
+        >
+          🎨 Studio Workspace
+        </button>
+        <button
+          onClick={() => setActiveTab("recovery")}
+          className={`px-5 py-2.5 rounded-full font-semibold text-sm transition ${
+            activeTab === "recovery"
+              ? "bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/25"
+              : "bg-slate-800/80 text-slate-300 hover:text-white"
+          }`}
+        >
+          ⚡ Pipeline Recovery
+        </button>
+        <button
+          onClick={() => setActiveTab("sandbox")}
+          className={`px-5 py-2.5 rounded-full font-semibold text-sm transition ${
+            activeTab === "sandbox"
+              ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/25"
+              : "bg-slate-800/80 text-slate-300 hover:text-white"
+          }`}
+        >
+          🛠️ Dev Module Sandbox
+        </button>
+      </div>
+
+      {activeTab === "recovery" && <PipelineRecovery />}
+      {activeTab === "sandbox" && <DevModuleConsole />}
+
+      {activeTab === "studio" && (
+        <div className="studio-layout">
       <div className="studio-main">
         <div className="studio-input-header">
           <Box1
@@ -124,8 +168,12 @@ export default function Main() {
           setHumour={setHumour}
           characterName={characterName}
           setCharacterName={setCharacterName}
+          enableSubtitles={enableSubtitles}
+          setEnableSubtitles={setEnableSubtitles}
         />
       </aside>
+    </div>
+      )}
     </div>
   );
 }

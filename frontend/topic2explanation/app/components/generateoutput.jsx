@@ -10,7 +10,8 @@ export const generateOutput = async (
   humour,
   characterName,
   setLoading,
-  setVideoUrl
+  setVideoUrl,
+  enableSubtitles = false
 ) => {
   try {
     const demoTopic = isDemoTopic(message);
@@ -57,6 +58,7 @@ export const generateOutput = async (
       creative,
       humour,
       characterName,
+      enableSubtitles,
       pipelineDelayMs: totalPipelineMs,
     });
 

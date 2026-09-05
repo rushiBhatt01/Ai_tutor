@@ -22,7 +22,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
+extras
 # Virtual Environments
 venv/
 env/
@@ -112,3 +112,6 @@ front_design.md
 push-log.txt
 SKILL (3).md
 requirements_current.txt
+# BMAD (local only)
+.bmad-core/
+.bmad-*/

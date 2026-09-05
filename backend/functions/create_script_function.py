@@ -6,10 +6,30 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+def sanitize_script_for_tts(script_text: str) -> str:
+    """
+    Strips all markdown formatting symbols (##, **, *, #, _, ~, `, -, etc.)
+    and bracketed stage directions so Text-to-Speech never dictates symbols aloud.
+    """
+    if not script_text:
+        return ""
+    # Remove markdown header tokens (e.g., ### 1. Introduction)
+    script_text = re.sub(r'#{1,6}\s*', '', script_text)
+    # Remove bold, italic, code backticks, symbols
+    script_text = re.sub(r'[*#_~`>|\\]', '', script_text)
+    # Remove bracketed directions like [Pause], (smiling), [Screen shows...]
+    script_text = re.sub(r'\[.*?\]|\(.*?\)', '', script_text)
+    # Remove horizontal rules and repeated dashes
+    script_text = re.sub(r'-{2,}', ' ', script_text)
+    # Clean up whitespace
+    script_text = re.sub(r'\n{3,}', '\n\n', script_text)
+    script_text = re.sub(r'[ \t]+', ' ', script_text).strip()
+    return script_text
+
 def create_script(topic_name, level_of_explanation, age, creativity_level, humour_level, character_name="Tutor"):
     """
     Generates a structured, comprehensive educational video tutorial script
-    using the Gemini 2.5-Flash model with audio TTS and Wav2Lip animation formatting.
+    using the Gemini 2.5-Flash model formatted cleanly for TTS and Wav2Lip animation.
     """
     load_dotenv()
     age = str(age)
@@ -99,11 +119,11 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
         f"- {creativity_string}\n"
         f"- {humour_string}\n"
         f"- Speak in first-person as {character_name} with an enthusiastic, encouraging, and clear voice.\n\n"
-        f"CRITICAL FORMATTING RULES FOR AUDIO TTS & LIP-SYNC (Wav2Lip):\n"
-        f"1. Output ONLY the raw spoken text narration meant to be read aloud by Text-to-Speech.\n"
-        f"2. Absolutely NO markdown formatting (no asterisks '*', hashtags '#', bullet points, or underline).\n"
-        f"3. Absolutely NO stage directions, camera instructions, or brackets (e.g. do NOT include '[Pause]', '(Smiles)', '[Screen shows...]').\n"
-        f"4. Do NOT include section headers or labels like 'Introduction:' or 'Key Concepts:'. Transition smoothly using natural spoken transition phrases.\n"
+        f"CRITICAL FORMATTING RULES FOR TEXT-TO-SPEECH & WAV2LIP:\n"
+        f"1. Output ONLY plain, raw spoken prose narration meant to be read aloud by Text-to-Speech.\n"
+        f"2. NEVER use markdown symbols anywhere in the response: NO asterisks '**' or '*', NO hashtags '##' or '###', NO underscores '_', NO backticks '`', NO bullet points.\n"
+        f"3. Do NOT include stage directions, camera instructions, or brackets (e.g. NEVER write '[Pause]', '(Smiles)', '[Screen shows...]').\n"
+        f"4. Do NOT include section headers or markdown titles like '### 1. INTRODUCTION:'. Use natural spoken transition phrases instead.\n"
         f"5. Conclude with a warm, formal sign-off: 'Sincerely, {character_name}.'\n"
     )
 
@@ -118,12 +138,10 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
         )
         script_text = response.text.strip() if response.text else ""
 
-        # Clean-up to strip any markdown symbols or stage directions for TTS safety
-        script_text = re.sub(r'[*#_~`]', '', script_text)
-        script_text = re.sub(r'\[.*?\]|\(.*?\)', '', script_text)
-        script_text = re.sub(r' +', ' ', script_text).strip()
+        # Post-processing sanitization: strip any accidental markdown syntax or symbols
+        sanitized_script = sanitize_script_for_tts(script_text)
 
-        return script_text
+        return sanitized_script
 
     except Exception as e:
         print(f"❌ Error invoking Gemini 2.5-Flash model for script generation: {e}")

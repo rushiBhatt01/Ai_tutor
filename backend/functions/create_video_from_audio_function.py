@@ -72,7 +72,17 @@ def process_single_audio(audio_file: str, timestamp: str, character_name: str, c
 
     try:
         print(f"[Wav2Lip] Starting lip sync for {audio_file} using {img_path} (cpu_mode={cpu_mode})...")
-        res = subprocess.run(command, check=True, timeout=600, capture_output=True, text=True)
+
+        # Force NVIDIA GTX 1650 for Wav2Lip inference.
+        # nvidia-smi reports GTX 1650 as CUDA device 0 (Windows Task Manager
+        # shows it as "GPU 1", but CUDA uses its own indexing).
+        env = os.environ.copy()
+        if not cpu_mode:
+            env["CUDA_VISIBLE_DEVICES"] = "0"
+        else:
+            env["CUDA_VISIBLE_DEVICES"] = ""  # Force CPU mode by hiding all GPUs
+
+        res = subprocess.run(command, check=True, timeout=600, capture_output=True, text=True, env=env)
         if res.stdout:
             print(res.stdout)
 

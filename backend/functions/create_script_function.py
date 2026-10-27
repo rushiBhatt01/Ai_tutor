@@ -100,20 +100,19 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
     # Initialize Google GenAI client
     client = genai.Client(api_key=api_key)
 
-    # Redefined prompt for Gemini 2.5-Flash
+    # Concise prompt targeting 60-90 seconds of narration (150-225 words)
     prompt_content = (
         f"You are {character_name}, an expert educator and captivating video tutorial narrator.\n"
-        f"Write a structured, comprehensive, and engaging video tutorial script explaining '{topic_name}' "
+        f"Write a SHORT, punchy video tutorial script explaining '{topic_name}' "
         f"tailored for a {age}-year-old audience.\n\n"
-        f"NARRATIVE STRUCTURE:\n"
-        f"The script must flow naturally as a spoken monologue across these 7 sequential sections:\n"
-        f"1. INTRODUCTION: High-level overview, hook, and clear definition of {topic_name}.\n"
-        f"2. KEY CONCEPTS: Core terminology, principles, and fundamental building blocks.\n"
-        f"3. ARCHITECTURE & STRUCTURE: System layout, key components, and internal design.\n"
-        f"4. WORKFLOW & PROCESS: Step-by-step execution flow and how components interact.\n"
-        f"5. PRACTICAL EXAMPLE: A realistic use case, practical scenario, or concrete demonstration.\n"
-        f"6. BENEFITS & ADVANTAGES: Major pros, trade-offs, and why this concept matters.\n"
-        f"7. SUMMARY & CONCLUSION: Key takeaways and a memorable wrap-up.\n\n"
+        f"ABSOLUTE LENGTH CONSTRAINT:\n"
+        f"The ENTIRE script MUST be between 150 and 225 words total (60 to 90 seconds of spoken narration). "
+        f"Be concise, direct, and impactful. Every sentence must earn its place.\n\n"
+        f"NARRATIVE STRUCTURE (4 brief sections, flowing naturally as speech):\n"
+        f"1. HOOK & INTRO: One attention-grabbing sentence, then a crisp definition of {topic_name} (2-3 sentences max).\n"
+        f"2. CORE EXPLANATION: The essential 'what' and 'how' — cover only the most important concepts (3-4 sentences max).\n"
+        f"3. QUICK EXAMPLE OR ANALOGY: One vivid, relatable example or analogy that makes the concept click (2-3 sentences max).\n"
+        f"4. WRAP-UP: One punchy takeaway and a brief sign-off (1-2 sentences max).\n\n"
         f"STYLE & TONAL GUIDELINES:\n"
         f"- {level_string}\n"
         f"- {creativity_string}\n"
@@ -121,25 +120,35 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
         f"- Speak in first-person as {character_name} with an enthusiastic, encouraging, and clear voice.\n\n"
         f"CRITICAL FORMATTING RULES FOR TEXT-TO-SPEECH & WAV2LIP:\n"
         f"1. Output ONLY plain, raw spoken prose narration meant to be read aloud by Text-to-Speech.\n"
-        f"2. NEVER use markdown symbols anywhere in the response: NO asterisks '**' or '*', NO hashtags '##' or '###', NO underscores '_', NO backticks '`', NO bullet points.\n"
-        f"3. Do NOT include stage directions, camera instructions, or brackets (e.g. NEVER write '[Pause]', '(Smiles)', '[Screen shows...]').\n"
-        f"4. Do NOT include section headers or markdown titles like '### 1. INTRODUCTION:'. Use natural spoken transition phrases instead.\n"
-        f"5. Conclude with a warm, formal sign-off: 'Sincerely, {character_name}.'\n"
+        f"2. NEVER use markdown symbols: NO asterisks, hashtags, underscores, backticks, or bullet points.\n"
+        f"3. Do NOT include stage directions, camera instructions, or brackets.\n"
+        f"4. Do NOT include section headers. Use natural spoken transition phrases instead.\n"
+        f"5. Conclude with a warm sign-off: 'Sincerely, {character_name}.'\n"
+        f"6. Remember: MAXIMUM 225 words. Count carefully.\n"
     )
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
             contents=prompt_content,
             config=types.GenerateContentConfig(
                 temperature=0.4,
-                max_output_tokens=1200,
+                max_output_tokens=450,
             )
         )
         script_text = response.text.strip() if response.text else ""
 
         # Post-processing sanitization: strip any accidental markdown syntax or symbols
         sanitized_script = sanitize_script_for_tts(script_text)
+
+        # Safety net: truncate to ~240 words max if the model over-generates
+        words = sanitized_script.split()
+        if len(words) > 240:
+            sanitized_script = " ".join(words[:240])
+            # Ensure we end on a complete sentence
+            last_period = sanitized_script.rfind(".")
+            if last_period > len(sanitized_script) * 0.6:
+                sanitized_script = sanitized_script[:last_period + 1]
 
         return sanitized_script
 

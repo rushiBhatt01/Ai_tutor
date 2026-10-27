@@ -115,3 +115,24 @@ requirements_current.txt
 # BMAD (local only)
 .bmad-core/
 .bmad-*/
+AGENTS.md
+web-bundles/
+
+# Generated run artifacts
+backend/runs/
+
+# Code tools & IDE/MCP caches
+.codegraph/
+.graphify/
+graphify-out/
+opencode.jsonc
+
+# Local docs & notes
+docs/
+backend/TODO.md
+
+# Wav2Lip local env & temp inputs
+backend/Wav2Lip/wav2lip_env/
+backend/Wav2Lip/inputs/
+backend/Wav2Lip/*.jpeg
+backend/Wav2Lip/*.png

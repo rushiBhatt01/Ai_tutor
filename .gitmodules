@@ -1,0 +1,4 @@
+[submodule "backend/Wav2Lip"]
+	path = backend/Wav2Lip
+	url = https://github.com/Rudrabha/Wav2Lip.git
+	ignore = all

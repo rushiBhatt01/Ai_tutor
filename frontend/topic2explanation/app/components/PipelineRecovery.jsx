@@ -73,9 +73,10 @@ export default function PipelineRecovery() {
 
   const stages = [
     { id: "script", name: "Script Generation" },
+    { id: "storyboard", name: "Storyboard Planning" },
     { id: "audio_tts", name: "Audio TTS Synthesis" },
-    { id: "scrapling_images", name: "Scrapling Image Scraping" },
-    { id: "sadtalker", name: "SadTalker Face Animation" },
+    { id: "scrapling_images", name: "Semantic Visual Matching" },
+    { id: "sadtalker", name: "Wav2Lip Lip-Sync Animation" },
     { id: "stitching", name: "Video Stitching" },
     { id: "validation", name: "Final Validation" }
   ];

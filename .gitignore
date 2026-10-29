@@ -129,6 +129,14 @@ opencode.jsonc
 
 # Local docs & notes
 docs/
+docs/*
+backend/tests
+backend/tests/*
+manim-test-module
+manim-test-module/*
+!manim-test-module/tests/
+!manim-test-module/tests/*
+docs/backend-code-organization-review.md
 backend/TODO.md
 
 # Wav2Lip local env & temp inputs

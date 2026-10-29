@@ -17,14 +17,22 @@ export default function Box1(props) {
   };
 
   const handleClick = () => {
-    if (props.message.trim()) {
-      props.setLoading(true);
+    if (props.message && props.message.trim()) {
+      if (props.onGenerate) {
+        props.onGenerate();
+      } else {
+        props.setLoading(true);
+      }
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && props.message.trim()) {
-      props.setLoading(true);
+    if (e.key === "Enter" && props.message && props.message.trim()) {
+      if (props.onGenerate) {
+        props.onGenerate();
+      } else {
+        props.setLoading(true);
+      }
     }
   };
 

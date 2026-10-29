@@ -33,25 +33,28 @@ def create_image_videos(timestamp):
     image_map: dict[str, str] = {}
     for f in os.listdir(image_folder):
         if f.lower().endswith((".jpg", ".jpeg", ".png")):
-            image_map[_chunk_id(f)] = os.path.join(image_folder, f)
+            chunk_id = _chunk_id(f)
+            if chunk_id in image_map:
+                raise ValueError(f"Multiple slide images found for chunk_id {chunk_id!r}")
+            image_map[chunk_id] = os.path.join(image_folder, f)
 
     audio_map: dict[str, str] = {}
     for f in os.listdir(audio_folder):
-        if f.lower().endswith(".wav"):
-            audio_map[_chunk_id(f)] = os.path.join(audio_folder, f)
+        if f.lower().endswith((".wav", ".mp3")):
+            chunk_id = _chunk_id(f)
+            if chunk_id in audio_map:
+                raise ValueError(f"Multiple audio files found for chunk_id {chunk_id!r}")
+            audio_map[chunk_id] = os.path.join(audio_folder, f)
 
-    # ── Match by chunk_id ──
-    common_ids = sorted(set(image_map) & set(audio_map))
-
-    # Remove orphan files (images without audio or vice-versa)
-    for cid in sorted(set(image_map) - set(audio_map)):
-        path = image_map[cid]
-        os.remove(path)
-        print(f"🗑️ Deleted orphan image: {os.path.basename(path)}")
-    for cid in sorted(set(audio_map) - set(image_map)):
-        path = audio_map[cid]
-        os.remove(path)
-        print(f"🗑️ Deleted orphan audio: {os.path.basename(path)}")
+    # Require a complete one-to-one pairing; retain mismatched inputs for diagnosis.
+    image_ids, audio_ids = set(image_map), set(audio_map)
+    if image_ids != audio_ids:
+        raise ValueError(
+            "Chunk image/audio IDs do not match; "
+            f"missing images for {sorted(audio_ids - image_ids)}, "
+            f"missing audio for {sorted(image_ids - audio_ids)}"
+        )
+    common_ids = sorted(image_ids, key=lambda value: [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", value)])
 
     total_files = len(common_ids)
     print(f"\n📁 Matched {total_files} chunk(s) by chunk_id.")
@@ -95,3 +98,4 @@ def create_image_videos(timestamp):
         except Exception as e:
             print(f"[{idx + 1}/{total_files}] ❌ Failed on {chunk_id}")
             print(f"    Error: {e}\n")
+            raise

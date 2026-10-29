@@ -13,36 +13,48 @@ import DevModuleConsole from "./DevModuleConsole";
 
 export default function Main() {
   const [activeTab, setActiveTab] = useState("studio"); // "studio" | "recovery" | "sandbox"
-  const [message, setMessage] = useState("");
-  const [level, setLevel] = useState("beginner");
-  const [age, setAge] = useState(18);
-  const [creative, setCreative] = useState(8);
-  const [humour, setHumour] = useState(6);
-  const [characterName, setCharacterName] = useState("Benjamin");
-  const [enableSubtitles, setEnableSubtitles] = useState(false);
+  const [params, setParams] = useState({
+    topic: "",
+    level: "beginner",
+    age: 18,
+    creative: 8,
+    humour: 6,
+    characterName: "Benjamin",
+    enableSubtitles: false,
+  });
   const [loading, setLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
 
-  useEffect(() => {
-    if (loading) {
-      try {
-        generateOutput(
-          message,
-          level,
-          age,
-          creative,
-          humour,
-          characterName,
-          setLoading,
-          setVideoUrl,
-          enableSubtitles
-        );
-      } catch (error) {
-        console.error("Error in generateOutput:", error);
-        setLoading(false);
-      }
+  const updateParam = (key, value) => {
+    setParams((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleGenerate = async (topicOverride) => {
+    const topicToRun = (topicOverride !== undefined ? topicOverride : params.topic).trim();
+    if (!topicToRun || loading) return;
+
+    if (topicOverride !== undefined) {
+      updateParam("topic", topicOverride);
     }
-  }, [age, characterName, creative, enableSubtitles, humour, level, loading, message]);
+
+    setLoading(true);
+    try {
+      await generateOutput(
+        topicToRun,
+        params.level,
+        params.age,
+        params.creative,
+        params.humour,
+        params.characterName,
+        setLoading,
+        setVideoUrl,
+        params.enableSubtitles
+      );
+    } catch (error) {
+      console.error("Error in generateOutput:", error);
+      setLoading(false);
+    }
+  };
 
   // Show info tooltip on page load
   useEffect(() => {
@@ -63,19 +75,12 @@ export default function Main() {
   };
 
   const handleQuickDemo = (e) => {
-    console.log("Quick Demo clicked");
     e.preventDefault();
     e.stopPropagation();
-    if (!DEMO_TOPICS || DEMO_TOPICS.length === 0) {
-      console.error("No demo topics available");
-      return;
-    }
+    if (!DEMO_TOPICS || DEMO_TOPICS.length === 0) return;
     const randomTopic = DEMO_TOPICS[Math.floor(Math.random() * DEMO_TOPICS.length)];
-    console.log("Selected random topic:", randomTopic);
     if (randomTopic && randomTopic.trim()) {
-      setMessage(randomTopic);
-      setLoading(true);
-      console.log("Loading set to true, message set to:", randomTopic);
+      handleGenerate(randomTopic);
     }
   };
 
@@ -120,59 +125,55 @@ export default function Main() {
 
       {activeTab === "studio" && (
         <div className="studio-layout">
-      <div className="studio-main">
-        <div className="studio-input-header">
-          <Box1
-            message={message}
-            setMessage={setMessage}
-            level={level}
-            age={age}
-            creative={creative}
-            humour={humour}
-            characterName={characterName}
-            loading={loading}
-            setLoading={setLoading}
-            videoUrl={videoUrl}
-          />
-          <div className="studio-main-backend-status-icon" title="Backend service is currently offline (requires higher system specs). Only demo videos available." data-tooltip-hint="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4" />
-              <path d="M12 8h.01" />
-            </svg>
-            <span className="studio-main-backend-tooltip">
-              <div className="studio-tooltip-content">
-                <p>Backend service is currently offline (requires higher system specs) So New Generation won&apos;t be working. Only demo Generated videos available.</p>
-                <button type="button" className="studio-quick-demo-btn" onClick={handleQuickDemo}>
-                  🎲 Quick Demo
-                </button>
+          <div className="studio-main">
+            <div className="studio-input-header">
+              <Box1
+                message={params.topic}
+                setMessage={(val) => updateParam("topic", val)}
+                loading={loading}
+                setLoading={setLoading}
+                onGenerate={handleGenerate}
+                videoUrl={videoUrl}
+              />
+              <div className="studio-main-backend-status-icon" title="Backend service is currently offline (requires higher system specs). Only demo videos available." data-tooltip-hint="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+                <span className="studio-main-backend-tooltip">
+                  <div className="studio-tooltip-content">
+                    <p>Backend service is currently offline (requires higher system specs) So New Generation won&apos;t be working. Only demo Generated videos available.</p>
+                    <button type="button" className="studio-quick-demo-btn" onClick={handleQuickDemo}>
+                      🎲 Quick Demo
+                    </button>
+                  </div>
+                </span>
               </div>
-            </span>
+            </div>
+            <VideoHistory
+              currentVideoUrl={videoUrl}
+              currentTopic={params.topic}
+              onSelect={handleHistorySelect}
+            />
           </div>
+          <aside className="studio-sidebar">
+            <Box2
+              level={params.level}
+              setLevel={(v) => updateParam("level", v)}
+              age={params.age}
+              setAge={(v) => updateParam("age", v)}
+              creative={params.creative}
+              setCreative={(v) => updateParam("creative", v)}
+              humour={params.humour}
+              setHumour={(v) => updateParam("humour", v)}
+              characterName={params.characterName}
+              setCharacterName={(v) => updateParam("characterName", v)}
+              enableSubtitles={params.enableSubtitles}
+              setEnableSubtitles={(v) => updateParam("enableSubtitles", v)}
+            />
+          </aside>
         </div>
-        <VideoHistory
-          currentVideoUrl={videoUrl}
-          currentTopic={message}
-          onSelect={handleHistorySelect}
-        />
-      </div>
-      <aside className="studio-sidebar">
-        <Box2
-          level={level}
-          setLevel={setLevel}
-          age={age}
-          setAge={setAge}
-          creative={creative}
-          setCreative={setCreative}
-          humour={humour}
-          setHumour={setHumour}
-          characterName={characterName}
-          setCharacterName={setCharacterName}
-          enableSubtitles={enableSubtitles}
-          setEnableSubtitles={setEnableSubtitles}
-        />
-      </aside>
-    </div>
       )}
     </div>
   );

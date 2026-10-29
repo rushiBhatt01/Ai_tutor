@@ -102,6 +102,14 @@ def evaluate_run_dag(run_id: str) -> Tuple[Optional[str], Dict[str, Any]]:
                 stage_valid = False
                 reason = "Script artifact missing or empty"
 
+        elif stage_name == "storyboard":
+            storyboard_file = os.path.join(run_dir, "artifacts", "storyboard.json")
+            if not os.path.isfile(storyboard_file):
+                storyboard_file = os.path.join(run_dir, "storyboard.json")
+            if not os.path.isfile(storyboard_file) or os.path.getsize(storyboard_file) < 20:
+                stage_valid = False
+                reason = "Storyboard artifact missing or empty"
+
         elif stage_name == "audio_tts":
             audio_dir = os.path.join(run_dir, "audio")
             chunks = [f for f in os.listdir(audio_dir) if f.endswith(".wav")] if os.path.exists(audio_dir) else []

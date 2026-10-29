@@ -7,6 +7,7 @@ from bson import ObjectId
 
 from functions.create_audio_image_function import create_audio_image
 from functions.create_script_function import create_script
+from functions.create_storyboard_function import create_storyboard
 from functions.create_video_from_audio_function import create_video_from_audio
 from functions.create_image_videos_function import create_image_videos
 from functions.combine_videos_function import combine_videos
@@ -57,7 +58,7 @@ async def video_main(
         start_stage = eval_stage if eval_stage != "COMPLETED" else "script"
         append_event_log(run_id, start_stage, "INFO", f"Evaluated starting stage for run: {start_stage}")
 
-    stages_order = ["script", "audio_tts", "scrapling_images", "wav2lip", "sadtalker", "stitching", "validation"]
+    stages_order = ["script", "storyboard", "audio_tts", "scrapling_images", "wav2lip", "sadtalker", "stitching", "validation"]
     start_index = 0
     for idx, stg in enumerate(stages_order):
         if stg == start_stage or (start_stage == "sadtalker" and stg == "wav2lip"):
@@ -65,7 +66,9 @@ async def video_main(
             break
 
     script_text = ""
+    storyboard = None
     script_file = os.path.join(run_dir, "artifacts", "script.json")
+    storyboard_file = os.path.join(run_dir, "artifacts", "storyboard.json")
 
     try:
         # ── 1. Script Generation Stage ──
@@ -78,23 +81,49 @@ async def video_main(
                 json.dump({"topic": topic_name, "script": script_text}, f, indent=2)
             
             update_stage_status(run_id, "script", "COMPLETED")
-            append_event_log(run_id, "script", "INFO", "Script generation completed", progress=20)
+            append_event_log(run_id, "script", "INFO", "Script generation completed", progress=15)
         else:
             if os.path.exists(script_file):
                 with open(script_file, "r", encoding="utf-8") as f:
                     script_text = json.load(f).get("script", "")
 
-        # ── 2. Audio TTS & Scrapling Image Scraping Stage ──
+        # ── 2. Storyboard Planning Stage ──
+        if start_index <= stages_order.index("storyboard"):
+            update_stage_status(run_id, "storyboard", "RUNNING")
+            append_event_log(run_id, "storyboard", "INFO", f"Planning pedagogical storyboard for '{topic_name}'", progress=20)
+            
+            storyboard = create_storyboard(topic_name, script_text)
+            
+            os.makedirs(os.path.dirname(storyboard_file), exist_ok=True)
+            storyboard_json = storyboard.model_dump_json(indent=2)
+            with open(storyboard_file, "w", encoding="utf-8") as f:
+                f.write(storyboard_json)
+            with open(os.path.join(run_dir, "storyboard.json"), "w", encoding="utf-8") as f:
+                f.write(storyboard_json)
+            
+            update_stage_status(run_id, "storyboard", "COMPLETED")
+            append_event_log(run_id, "storyboard", "INFO", f"Storyboard planned: {len(storyboard.scenes)} scenes", progress=25)
+        else:
+            # Resume: reload storyboard from persisted JSON
+            target_file = storyboard_file if os.path.exists(storyboard_file) else os.path.join(run_dir, "storyboard.json")
+            if os.path.exists(target_file):
+                from functions.storyboard_schema import Storyboard as StoryboardSchema
+                with open(target_file, "r", encoding="utf-8") as f:
+                    storyboard = StoryboardSchema.model_validate_json(f.read())
+            elif script_text:
+                storyboard = create_storyboard(topic_name, script_text)
+
+        # ── 3. Audio TTS & Slide Image Generation Stage ──
         if start_index <= stages_order.index("scrapling_images"):
             update_stage_status(run_id, "audio_tts", "RUNNING")
             update_stage_status(run_id, "scrapling_images", "RUNNING")
-            append_event_log(run_id, "audio_tts", "INFO", "Synthesizing Edge-TTS audio & scraping images with Scrapling", progress=35)
+            append_event_log(run_id, "audio_tts", "INFO", "Synthesizing Edge-TTS audio & generating slide images", progress=35)
             
-            create_audio_image(topic_name, script_text, character_name, run_dir)
+            create_audio_image(topic_name, script_text, character_name, run_dir, storyboard=storyboard)
             
             update_stage_status(run_id, "audio_tts", "COMPLETED")
             update_stage_status(run_id, "scrapling_images", "COMPLETED")
-            append_event_log(run_id, "scrapling_images", "INFO", "Audio synthesis and Scrapling image scraping completed", progress=50)
+            append_event_log(run_id, "scrapling_images", "INFO", "Audio synthesis and slide image generation completed", progress=50)
 
         # ── 3. Wav2Lip Lip-Sync Animation Stage ──
         if start_index <= min(stages_order.index("wav2lip"), stages_order.index("sadtalker")):

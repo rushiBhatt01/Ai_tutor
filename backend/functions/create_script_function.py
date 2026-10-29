@@ -3,8 +3,13 @@ import json
 import random
 import re
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+
+from functions.cerebras_client import (
+    resolve_cerebras_api_key,
+    generate_cerebras_completion,
+    CEREBRAS_DEFAULT_MODEL,
+)
+
 
 def sanitize_script_for_tts(script_text: str) -> str:
     """
@@ -26,10 +31,13 @@ def sanitize_script_for_tts(script_text: str) -> str:
     script_text = re.sub(r'[ \t]+', ' ', script_text).strip()
     return script_text
 
+
 def create_script(topic_name, level_of_explanation, age, creativity_level, humour_level, character_name="Tutor"):
     """
     Generates a structured, comprehensive educational video tutorial script
-    using the Gemini 2.5-Flash model formatted cleanly for TTS and Wav2Lip animation.
+    using Cerebras llama3.1-8b (lowest credit consumption model: ~$0.10/M tokens),
+    with seamless fallback to Gemini if Cerebras key is absent.
+    Formatted cleanly for TTS and Wav2Lip animation.
     """
     load_dotenv()
     age = str(age)
@@ -77,32 +85,13 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
     else:
         humour_string = "Add funny observations, witty remarks, and playful banter to make the learning experience hilarious and engaging."
 
-    # Resolve API Key (checking GEMINI_API_KEY -> GOOGLE_API_KEY -> apikeys.json)
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
-        keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "apikeys.json"))
-        if os.path.exists(keys_file):
-            try:
-                with open(keys_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    keys = data.get("api_keys", [])
-                    if keys:
-                        api_key = random.choice(keys)
-            except Exception as e:
-                print(f"Warning loading apikeys.json: {e}")
-
-    if not api_key:
-        raise ValueError(
-            "Gemini API key not found. Please set GEMINI_API_KEY or GOOGLE_API_KEY "
-            "in your environment or backend/.env file."
-        )
-
-    # Initialize Google GenAI client
-    client = genai.Client(api_key=api_key)
-
     # Concise prompt targeting 60-90 seconds of narration (150-225 words)
-    prompt_content = (
+    system_prompt = (
         f"You are {character_name}, an expert educator and captivating video tutorial narrator.\n"
+        f"Output ONLY plain, spoken prose narration for Text-to-Speech.\n"
+        f"Do NOT include markdown headers, bolding, bullet points, stage directions, or brackets."
+    )
+    user_prompt = (
         f"Write a SHORT, punchy video tutorial script explaining '{topic_name}' "
         f"tailored for a {age}-year-old audience.\n\n"
         f"ABSOLUTE LENGTH CONSTRAINT:\n"
@@ -127,31 +116,72 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
         f"6. Remember: MAXIMUM 225 words. Count carefully.\n"
     )
 
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=prompt_content,
-            config=types.GenerateContentConfig(
-                temperature=0.4,
-                max_output_tokens=450,
+    # 1. Primary path: Cerebras (lowest cost Llama 3.1 8B)
+    cerebras_key = resolve_cerebras_api_key()
+    if cerebras_key:
+        try:
+            print(f"🚀 Generating script using Cerebras ({CEREBRAS_DEFAULT_MODEL} - lowest credit consumption)...")
+            script_text = generate_cerebras_completion(
+                prompt=user_prompt,
+                system_prompt=system_prompt,
+                model=CEREBRAS_DEFAULT_MODEL,
+                temperature=0.3,
+                max_tokens=450,
+                api_key=cerebras_key,
             )
-        )
-        script_text = response.text.strip() if response.text else ""
+            sanitized_script = sanitize_script_for_tts(script_text)
+            words = sanitized_script.split()
+            if len(words) > 240:
+                sanitized_script = " ".join(words[:240])
+                last_period = sanitized_script.rfind(".")
+                if last_period > len(sanitized_script) * 0.6:
+                    sanitized_script = sanitized_script[:last_period + 1]
+            return sanitized_script
+        except Exception as cerebras_err:
+            print(f"⚠️ Cerebras generation error: {cerebras_err}. Trying Gemini fallback if available...")
 
-        # Post-processing sanitization: strip any accidental markdown syntax or symbols
-        sanitized_script = sanitize_script_for_tts(script_text)
+    # 2. Fallback path: Gemini
+    gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not gemini_key:
+        keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "apikeys.json"))
+        if os.path.exists(keys_file):
+            try:
+                with open(keys_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    keys = data.get("api_keys", [])
+                    if keys:
+                        gemini_key = random.choice(keys)
+            except Exception:
+                pass
 
-        # Safety net: truncate to ~240 words max if the model over-generates
-        words = sanitized_script.split()
-        if len(words) > 240:
-            sanitized_script = " ".join(words[:240])
-            # Ensure we end on a complete sentence
-            last_period = sanitized_script.rfind(".")
-            if last_period > len(sanitized_script) * 0.6:
-                sanitized_script = sanitized_script[:last_period + 1]
+    if gemini_key:
+        try:
+            print("ℹ️ Invoking Gemini fallback for script generation...")
+            from google import genai
+            from google.genai import types
+            client = genai.Client(api_key=gemini_key)
+            response = client.models.generate_content(
+                model="gemini-2.5-flash-lite",
+                contents=f"{system_prompt}\n\n{user_prompt}",
+                config=types.GenerateContentConfig(
+                    temperature=0.4,
+                    max_output_tokens=450,
+                )
+            )
+            script_text = response.text.strip() if response.text else ""
+            sanitized_script = sanitize_script_for_tts(script_text)
+            words = sanitized_script.split()
+            if len(words) > 240:
+                sanitized_script = " ".join(words[:240])
+                last_period = sanitized_script.rfind(".")
+                if last_period > len(sanitized_script) * 0.6:
+                    sanitized_script = sanitized_script[:last_period + 1]
+            return sanitized_script
+        except Exception as gemini_err:
+            print(f"❌ Gemini fallback error: {gemini_err}")
+            raise gemini_err
 
-        return sanitized_script
-
-    except Exception as e:
-        print(f"❌ Error invoking Gemini 2.5-Flash model for script generation: {e}")
-        raise e
+    raise ValueError(
+        "No LLM API key found. Please set CEREBRAS_API_KEY (recommended for lowest cost) "
+        "or GEMINI_API_KEY in backend/.env."
+    )

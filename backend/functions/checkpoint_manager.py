@@ -8,6 +8,7 @@ RUNS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../runs"))
 
 PIPELINE_STAGES = [
     "script",
+    "storyboard",
     "audio_tts",
     "scrapling_images",
     "sadtalker",

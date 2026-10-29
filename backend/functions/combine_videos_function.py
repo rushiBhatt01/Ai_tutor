@@ -9,6 +9,36 @@ from bson import ObjectId
 from db import set_cached_video
 from media_store import upload_file
 
+
+def match_chunk_videos(character_folder, image_folder):
+    """Return paired video paths keyed by chunk ID, rejecting incomplete inputs."""
+    def index_mp4_files(folder):
+        files = {}
+        for filename in os.listdir(folder):
+            if filename.lower().endswith(".mp4"):
+                chunk_id = os.path.splitext(filename)[0]
+                if chunk_id in files:
+                    raise ValueError(f"Duplicate video for chunk_id {chunk_id!r} in {folder}")
+                files[chunk_id] = os.path.join(folder, filename)
+        return files
+
+    character_videos = index_mp4_files(character_folder)
+    image_videos = index_mp4_files(image_folder)
+    character_ids, image_ids = set(character_videos), set(image_videos)
+    if character_ids != image_ids:
+        raise ValueError(
+            "Chunk video IDs do not match; "
+            f"missing image videos for {sorted(character_ids - image_ids)}, "
+            f"missing character videos for {sorted(image_ids - character_ids)}"
+        )
+    chunk_ids = sorted(
+        character_ids,
+        key=lambda value: [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", value)],
+    )
+    if not chunk_ids:
+        raise ValueError("No matching chunk videos found to combine")
+    return [(chunk_id, character_videos[chunk_id], image_videos[chunk_id]) for chunk_id in chunk_ids]
+
 def get_video_resolution(video_path):
     """Get width and height of video using ffprobe."""
     cmd = [
@@ -58,24 +88,10 @@ async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
     video1_folder = f"{timestamp}/video"
     video2_folder = f"{timestamp}/image_videos"
 
-    def _chunk_sort_key(filename: str) -> int:
-        """Extract numeric index from chunk_id filenames like 'seg_0.mp4' or '0.mp4'."""
-        stem = os.path.splitext(filename)[0]
-        # Handle both 'seg_0' and '0' style naming
-        match = re.search(r'(\d+)', stem)
-        return int(match.group(1)) if match else 0
-
-    video1_files = sorted(os.listdir(video1_folder), key=_chunk_sort_key)
-    video2_files = sorted(os.listdir(video2_folder), key=_chunk_sort_key)
-
-    min_len = min(len(video1_files), len(video2_files))
-    video1_files = video1_files[:min_len]
-    video2_files = video2_files[:min_len]
+    chunk_pairs = match_chunk_videos(video1_folder, video2_folder)
 
     clips = []
-    for i in range(min_len):
-        v1_path = os.path.join(video1_folder, video1_files[i])
-        v2_path = os.path.join(video2_folder, video2_files[i])
+    for i, (chunk_id, v1_path, v2_path) in enumerate(chunk_pairs):
         out_path = f"{timestamp}/temp_{i}.mp4"
 
         # Always use overlay placement for the character/video instead of side-by-side.

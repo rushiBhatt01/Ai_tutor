@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 
 export const PIPELINE_STEPS = [
   { id: "script", label: "Generating script", icon: "📜", duration: 1000 },
-  { id: "voice", label: "Synthesizing voice", icon: "🎙️", duration: 4000 },
-  { id: "visuals", label: "Fetching visuals", icon: "🖼️", duration: 2000 },
+  { id: "storyboard", label: "Planning storyboard", icon: "📋", duration: 1500 },
+  { id: "voice", label: "Synthesizing voice", icon: "🎙️", duration: 3000 },
+  { id: "visuals", label: "Semantic visual matching", icon: "🖼️", duration: 2000 },
   { id: "animation", label: "Animating instructor", icon: "🎭", duration: 2000 },
   { id: "render", label: "Composing final video", icon: "🎬", duration: 1000 },
 ];

@@ -24,27 +24,14 @@ export const checkCachedVideoExists = async (topic) => {
 
 /**
  * Load a cached video directly from the frontend/prev_videos folder
- * Returns a blob URL that can be used as src for <video>
+ * Returns a static URL for direct progressive streaming
  */
 export const loadCachedVideo = async (topic) => {
-  try {
-    const filename = getDemoTopicFilename(topic);
-    if (!filename) {
-      throw new Error(`No cached video found for topic: ${topic}`);
-    }
-
-    const response = await fetch(`/prev_videos/${filename}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch cached video: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    const videoUrl = URL.createObjectURL(blob);
-    return videoUrl;
-  } catch (error) {
-    console.error(`Error loading cached video for topic "${topic}":`, error);
-    throw error;
+  const filename = getDemoTopicFilename(topic);
+  if (!filename) {
+    throw new Error(`No cached video found for topic: ${topic}`);
   }
+  return `/prev_videos/${filename}`;
 };
 
 /**

@@ -43,6 +43,9 @@ venv.bak/
 
 # Environment variables
 .env
+.local-secrets/
+.env.production
+**/.env.production
 .env.local
 .env.*.local
 
@@ -92,10 +95,12 @@ demo.mp4
 Thumbs.db
 
 # Docker
-.dockerignore
+!.dockerignore
 
 # Misc
 *.bak
+cache/
+backend/cache/
 *.tmp
 .codex/
 .cursor/

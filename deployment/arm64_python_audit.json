@@ -1,0 +1,1981 @@
+{
+  "python": "CPython 3.11",
+  "platform": "linux/arm64 (aarch64, glibc <= 2.36)",
+  "lock": "backend/requirements.cpu.lock",
+  "lock_sha256": "0c23f09b0b3de2e3bc79a84a3c58523b176ff12a279980389c14f5dedce166b2",
+  "pypi_source": "https://pypi.org/pypi/<package>/<version>/json",
+  "packages_checked": 178,
+  "summary": {
+    "hashed-arm64-wheel": 172,
+    "source-build-required": 6
+  },
+  "packages": [
+    {
+      "name": "aiohappyeyeballs",
+      "version": "2.7.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "aiohappyeyeballs-2.7.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "aiohttp",
+      "version": "3.14.5",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "aiohttp-3.14.5-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "aiohttp-3.14.5-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "aiosignal",
+      "version": "1.4.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "aiosignal-1.4.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "annotated_doc-0.0.5-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "annotated_types-0.8.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "anyio",
+      "version": "4.16.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "anyio-4.16.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "asn1crypto",
+      "version": "1.5.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "asn1crypto-1.5.1-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "attrs-26.1.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "audioread",
+      "version": "3.1.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "audioread-3.1.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "av",
+      "version": "13.1.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "av-13.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "backoff",
+      "version": "2.2.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "backoff-2.2.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "bcrypt",
+      "version": "5.0.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "bcrypt-5.0.0-cp38-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+        "bcrypt-5.0.0-cp38-abi3-manylinux_2_28_aarch64.whl",
+        "bcrypt-5.0.0-cp38-abi3-manylinux_2_34_aarch64.whl",
+        "bcrypt-5.0.0-cp39-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl"
+      ],
+      "verified_wheel_count": 6,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "beautifulsoup4",
+      "version": "4.14.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "beautifulsoup4-4.14.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "cerebras-cloud-sdk",
+      "version": "1.91.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "cerebras_cloud_sdk-1.91.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "certifi",
+      "version": "2026.10.23",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "certifi-2026.10.23-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "cffi-2.1.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "charset_normalizer-3.5.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "charset_normalizer-3.5.2-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "charset_normalizer-3.5.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 3,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "circuitbreaker",
+      "version": "2.1.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "circuitbreaker-2.1.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "click-8.5.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "cloudpickle",
+      "version": "3.1.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "cloudpickle-3.1.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "cloup",
+      "version": "4.0.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "cloup-4.0.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "cohere",
+      "version": "5.21.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "cohere-5.21.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "crc32c",
+      "version": "2.8",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "crc32c-2.8-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "cryptography",
+      "version": "46.0.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "cryptography-46.0.3-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+        "cryptography-46.0.3-cp311-abi3-manylinux_2_28_aarch64.whl",
+        "cryptography-46.0.3-cp311-abi3-manylinux_2_34_aarch64.whl",
+        "cryptography-46.0.3-cp38-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl"
+      ],
+      "verified_wheel_count": 6,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "cssselect",
+      "version": "1.6.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "cssselect-1.6.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "decorator",
+      "version": "4.4.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "decorator-4.4.2-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "distro",
+      "version": "1.9.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "distro-1.9.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "dnspython",
+      "version": "2.9.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "dnspython-2.9.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "ecdsa",
+      "version": "0.19.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "ecdsa-0.19.2-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "edge-tts",
+      "version": "7.3.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "edge_tts-7.3.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "fastapi",
+      "version": "0.115.12",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "fastapi-0.115.12-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "fastavro",
+      "version": "1.13.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "fastavro-1.13.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "ffmpeg-python",
+      "version": "0.2.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "ffmpeg_python-0.2.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "filelock",
+      "version": "4.2.9",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "filelock-4.2.9-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "filetype",
+      "version": "1.2.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "filetype-1.2.0-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "frostwork",
+      "version": "0.2.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "frostwork-0.2.2-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "frozenlist",
+      "version": "1.8.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "frozenlist-1.8.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "frozenlist-1.8.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "fsspec",
+      "version": "2026.9.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "fsspec-2026.9.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "future",
+      "version": "1.0.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "future-1.0.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "glcontext",
+      "version": "3.1.0",
+      "status": "source-build-required",
+      "verified_wheels": [],
+      "verified_wheel_count": 0,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "google-auth",
+      "version": "2.62.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "google_auth-2.62.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "google-genai",
+      "version": "1.56.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "google_genai-1.56.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "h11-0.16.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "h2",
+      "version": "4.4.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "h2-4.4.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "hf-xet",
+      "version": "1.8.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "hf_xet-1.8.0-cp38-abi3-manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "hpack",
+      "version": "4.2.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "hpack-4.2.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "httpcore",
+      "version": "1.0.9",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "httpcore-1.0.9-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "httpcore2",
+      "version": "2.16.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "httpcore2-2.16.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "httpx",
+      "version": "0.28.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "httpx-0.28.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "httpx-sse",
+      "version": "0.4.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "httpx_sse-0.4.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "httpx2",
+      "version": "2.16.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "httpx2-2.16.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "huggingface-hub",
+      "version": "1.33.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "huggingface_hub-1.33.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "hyperframe",
+      "version": "6.1.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "hyperframe-6.1.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "idna-3.20-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "imageio",
+      "version": "2.37.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "imageio-2.37.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "imageio-ffmpeg",
+      "version": "0.6.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "imageio_ffmpeg-0.6.0-py3-none-manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "isosurfaces",
+      "version": "0.1.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "isosurfaces-0.1.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "jinja2-3.1.6-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "jiter",
+      "version": "0.19.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "jiter-0.19.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "joblib",
+      "version": "1.6.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "joblib-1.6.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "jsonpatch",
+      "version": "1.44",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "jsonpatch-1.44-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "jsonpointer",
+      "version": "3.10",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "jsonpointer-3.10-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain",
+      "version": "1.4.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain-1.4.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-cerebras",
+      "version": "0.8.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_cerebras-0.8.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-classic",
+      "version": "1.0.8",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_classic-1.0.8-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-cohere",
+      "version": "0.6.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_cohere-0.6.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-community",
+      "version": "0.4.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_community-0.4.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-core",
+      "version": "1.7.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_core-1.7.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-google-genai",
+      "version": "4.1.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_google_genai-4.1.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-openai",
+      "version": "1.7.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_openai-1.7.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-protocol",
+      "version": "0.0.21",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_protocol-0.0.21-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langchain-text-splitters",
+      "version": "1.1.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langchain_text_splitters-1.1.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langgraph",
+      "version": "1.2.11",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langgraph-1.2.11-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langgraph-checkpoint",
+      "version": "4.3.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langgraph_checkpoint-4.3.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langgraph-prebuilt",
+      "version": "1.1.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langgraph_prebuilt-1.1.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langgraph-sdk",
+      "version": "0.4.14",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langgraph_sdk-0.4.14-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "langsmith",
+      "version": "0.14.17",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "langsmith-0.14.17-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "lazy-loader",
+      "version": "0.6",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "lazy_loader-0.6-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "librosa",
+      "version": "0.10.2.post1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "librosa-0.10.2.post1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "llvmlite",
+      "version": "0.50.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "llvmlite-0.50.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "lxml",
+      "version": "6.1.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "lxml-6.1.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+        "lxml-6.1.1-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "manim",
+      "version": "0.19.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "manim-0.19.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "manimpango",
+      "version": "0.7.1",
+      "status": "source-build-required",
+      "verified_wheels": [],
+      "verified_wheel_count": 0,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "mapbox-earcut",
+      "version": "2.1.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "mapbox_earcut-2.1.0-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "markdown_it_py-4.2.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "markupsafe-3.0.4-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "mdurl-0.1.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "moderngl",
+      "version": "5.13.0",
+      "status": "source-build-required",
+      "verified_wheels": [],
+      "verified_wheel_count": 0,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "moderngl-window",
+      "version": "3.1.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "moderngl_window-3.1.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "motor",
+      "version": "3.7.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "motor-3.7.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "moviepy",
+      "version": "1.0.3",
+      "status": "source-build-required",
+      "verified_wheels": [],
+      "verified_wheel_count": 0,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "mpmath",
+      "version": "1.3.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "mpmath-1.3.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "msgpack",
+      "version": "1.1.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "msgpack-1.1.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "multidict",
+      "version": "7.2.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "multidict-7.2.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "multidict-7.2.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "networkx",
+      "version": "3.6.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "networkx-3.6.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "numba",
+      "version": "0.68.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "numba-0.68.1-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "numpy",
+      "version": "2.2.6",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "numpy-2.2.6-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "oci",
+      "version": "2.190.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "oci-2.190.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "openai",
+      "version": "3.46.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "openai-3.46.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "opencv-python-headless",
+      "version": "4.11.0.86",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "opencv_python_headless-4.11.0.86-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "orjson",
+      "version": "3.12.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "orjson-3.12.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "ormsgpack",
+      "version": "1.13.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "ormsgpack-1.13.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "packaging-26.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pillow",
+      "version": "12.0.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pillow-12.0.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+        "pillow-12.0.0-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "platformdirs",
+      "version": "4.14.5",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "platformdirs-4.14.5-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pooch",
+      "version": "1.9.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pooch-1.9.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "proglog",
+      "version": "0.1.12",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "proglog-0.1.12-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "propcache",
+      "version": "0.5.4",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "propcache-0.5.4-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "propcache-0.5.4-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pyasn1",
+      "version": "0.6.5",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pyasn1-0.6.5-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pyasn1-modules",
+      "version": "0.4.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pyasn1_modules-0.4.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pycairo",
+      "version": "1.29.2",
+      "status": "source-build-required",
+      "verified_wheels": [],
+      "verified_wheel_count": 0,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pycparser",
+      "version": "3.12",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pycparser-3.12-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pydantic",
+      "version": "2.11.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pydantic-2.11.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.33.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pydantic_core-2.33.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pydantic-settings",
+      "version": "2.15.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pydantic_settings-2.15.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pydub",
+      "version": "0.25.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pydub-0.25.1-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pyglet",
+      "version": "2.1.19",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pyglet-2.1.19-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pyglm",
+      "version": "2.8.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pyglm-2.8.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl",
+        "pyglm-2.8.3-cp311-cp311-manylinux_2_34_aarch64.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pygments",
+      "version": "2.21.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pygments-2.21.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pyjwt",
+      "version": "2.15.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pyjwt-2.15.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pymongo",
+      "version": "4.16.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pymongo-4.16.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pyopenssl",
+      "version": "26.2.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pyopenssl-26.2.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.8.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "python_dateutil-2.8.2-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "python-dotenv",
+      "version": "1.2.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "python_dotenv-1.2.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "python-jose",
+      "version": "3.5.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "python_jose-3.5.0-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.20",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "python_multipart-0.0.20-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "python-pkcs11",
+      "version": "0.9.4",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "python_pkcs11-0.9.4-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pytz",
+      "version": "2026.6",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pytz-2026.6-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "pyyaml",
+      "version": "6.0.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "pyyaml-6.0.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "regex",
+      "version": "2026.11.7",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "regex-2026.11.7-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "requests-2.34.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "requests-toolbelt",
+      "version": "1.0.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "requests_toolbelt-1.0.0-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "rich",
+      "version": "15.0.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "rich-15.0.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "rsa",
+      "version": "4.9.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "rsa-4.9.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "safetensors",
+      "version": "0.8.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "safetensors-0.8.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "scikit-image",
+      "version": "0.25.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "scikit_image-0.25.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "scikit-learn",
+      "version": "1.7.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "scikit_learn-1.7.1-cp311-cp311-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "scipy",
+      "version": "1.15.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "scipy-1.15.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "scrapling",
+      "version": "0.4.8",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "scrapling-0.4.8-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "screeninfo",
+      "version": "0.8.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "screeninfo-0.8.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "shellingham",
+      "version": "1.5.4",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "shellingham-1.5.4-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "six-1.17.0-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "skia-pathops",
+      "version": "0.9.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "skia_pathops-0.9.2-cp310-abi3-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "sniffio",
+      "version": "1.3.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "sniffio-1.3.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "soundfile",
+      "version": "0.12.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "soundfile-0.12.1-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "soupsieve",
+      "version": "2.10",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "soupsieve-2.10-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "soxr",
+      "version": "1.1.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "soxr-1.1.0-cp311-cp311-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl",
+        "soxr-1.1.0-cp312-abi3-manylinux_2_26_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "sqlalchemy",
+      "version": "2.1.8",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "sqlalchemy-2.1.8-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "sqlalchemy-2.1.8-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "srt",
+      "version": "3.5.3",
+      "status": "source-build-required",
+      "verified_wheels": [],
+      "verified_wheel_count": 0,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "starlette",
+      "version": "0.46.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "starlette-0.46.2-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "svgelements",
+      "version": "1.9.6",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "svgelements-1.9.6-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "sympy",
+      "version": "1.13.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "sympy-1.13.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "tabulate",
+      "version": "0.10.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "tabulate-0.10.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "tenacity",
+      "version": "9.1.4",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "tenacity-9.1.4-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "threadpoolctl",
+      "version": "3.8.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "threadpoolctl-3.8.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "tifffile",
+      "version": "2026.3.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "tifffile-2026.3.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "tiktoken",
+      "version": "0.14.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "tiktoken-0.14.0-cp311-cp311-manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "tld",
+      "version": "0.13.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "tld-0.13.2-py2.py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "tokenizers",
+      "version": "0.22.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "tokenizers-0.22.2-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "torch",
+      "version": "2.6.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "torch-2.6.0-cp311-cp311-manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": false,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "torchvision",
+      "version": "0.21.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "torchvision-0.21.0-1-cp311-cp311-manylinux_2_28_aarch64.whl",
+        "torchvision-0.21.0-cp311-cp311-manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": false,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "tqdm",
+      "version": "4.66.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "tqdm-4.66.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "transformers",
+      "version": "5.3.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "transformers-5.3.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "truststore",
+      "version": "0.10.5",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "truststore-0.10.5-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "typer",
+      "version": "0.28.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "typer-0.28.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "types-pyyaml",
+      "version": "6.0.12.20261103",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "types_pyyaml-6.0.12.20261103-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "types-requests",
+      "version": "2.33.0.20261030",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "types_requests-2.33.0.20261030-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "typing_extensions-4.16.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.5",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "typing_inspection-0.4.5-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "urllib3-2.8.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "uuid-utils",
+      "version": "0.19.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "uuid_utils-0.19.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.34.3",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "uvicorn-0.34.3-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "w3lib",
+      "version": "2.6.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "w3lib-2.6.0-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "watchdog",
+      "version": "7.1.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "watchdog-7.1.0-py3-none-manylinux2014_aarch64.whl",
+        "watchdog-7.1.0-py3-none-manylinux_2_17_aarch64.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "websockets",
+      "version": "15.0.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "websockets-15.0.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
+        "websockets-15.0.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "xxhash",
+      "version": "4.0.2",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "xxhash-4.0.2-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "yarl",
+      "version": "1.25.1",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "yarl-1.25.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl",
+        "yarl-1.25.1-py3-none-any.whl"
+      ],
+      "verified_wheel_count": 2,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    },
+    {
+      "name": "zstandard",
+      "version": "0.25.0",
+      "status": "hashed-arm64-wheel",
+      "verified_wheels": [
+        "zstandard-0.25.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl"
+      ],
+      "verified_wheel_count": 1,
+      "sdist_available": true,
+      "lock_hashes_present": true
+    }
+  ]
+}

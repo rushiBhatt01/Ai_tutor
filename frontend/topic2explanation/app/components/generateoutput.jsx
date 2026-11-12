@@ -1,5 +1,6 @@
 import { PIPELINE_STEPS } from "./PipelineProgress";
 import { resolveCachedVideoUrl } from "../utils/cacheUtil";
+import { backendUrl } from "../utils/backendUrl";
 
 export const generateOutput = async (
   message,
@@ -38,7 +39,9 @@ export const generateOutput = async (
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-    headers.append("Authorization", "Basic " + btoa("myusername:mypassword"));
+    if (process.env.NODE_ENV === "development") {
+      headers.append("Authorization", "Basic " + btoa("myusername:mypassword"));
+    }
 
     // Add small buffer (500ms) to backend request
     const totalPipelineMs = pipelineDuration + 500;
@@ -54,13 +57,29 @@ export const generateOutput = async (
       pipelineDelayMs: totalPipelineMs,
     });
 
-    const response = await fetch("http://127.0.0.1:8000/videoCreate", {
+    const response = await fetch(backendUrl("/videoCreate"), {
       method: "POST",
       body: body,
       headers: headers,
     });
 
-    if (response.ok) {
+    if (response.status === 202) {
+      const job = await response.json();
+      // The browser's existing Basic session authenticates same-origin polls.
+      const deadline = Date.now() + 2 * 60 * 60 * 1000;
+      while (Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const statusResponse = await fetch(backendUrl(`/api/jobs/${job.job_id}`));
+        if (!statusResponse.ok) throw new Error("Could not read lesson progress");
+        const status = await statusResponse.json();
+        if (status.status === "FAILED") throw new Error(`Lesson generation failed: ${status.error || "unknown error"}`);
+        if (status.status === "COMPLETED") {
+          setVideoUrl(backendUrl(status.video_url));
+          return;
+        }
+      }
+      throw new Error("Lesson is still processing. Check its status before submitting again.");
+    } else if (response.ok) {
       const blob = await response.blob();
       const videoUrl = URL.createObjectURL(blob);
       setVideoUrl(videoUrl);

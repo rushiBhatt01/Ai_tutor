@@ -1,0 +1,29 @@
+{
+    admin off
+}
+
+{$SITE_ADDRESS:localhost} {
+    # TLS is automatic for a configured domain. localhost uses a local CA for
+    # SSH-tunnel validation; never switch to public HTTP Basic authentication.
+    basic_auth {
+        {env.API_USERNAME} {env.PROXY_PASSWORD_HASH}
+    }
+    request_body {
+        max_size 64KB
+    }
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy same-origin
+        -Server
+    }
+    @privateAPI path /backend/docs* /backend/redoc* /backend/openapi.json /backend/api/dev/*
+    respond @privateAPI 404
+    handle_path /backend/* {
+        reverse_proxy api:8000
+    }
+    handle {
+        root * /srv
+        try_files {path} {path}.html {path}/index.html
+        file_server
+    }
+}

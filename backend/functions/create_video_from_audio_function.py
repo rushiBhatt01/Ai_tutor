@@ -14,6 +14,7 @@ MAX_WORKERS = 1
 executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
 def process_single_audio(audio_file: str, timestamp: str, character_name: str, cpu_mode: bool = False) -> str:
+    cpu_mode = cpu_mode or os.getenv("CPU_ONLY", "false").lower() == "true"
     audio_path = os.path.join(timestamp, "audio", audio_file)
     
     # Support png, jpg, jpeg extensions for character image
@@ -45,6 +46,22 @@ def process_single_audio(audio_file: str, timestamp: str, character_name: str, c
     os.makedirs(video_output_dir, exist_ok=True)
 
     final_output_file = os.path.join(video_output_dir, f"{os.path.splitext(audio_file)[0]}.mp4")
+
+    if os.getenv("AVATAR_MODE", "wav2lip") == "static":
+        # Explicit deployment mode while ARM64 Wav2Lip remains unbenchmarked.
+        # Preserve narration and the presenter slot without model inference.
+        if not os.path.isfile(img_path):
+            from PIL import Image, ImageDraw
+            img_path = os.path.join(video_output_dir, "presenter.png")
+            image = Image.new("RGB", (250, 220), "#172033")
+            ImageDraw.Draw(image).text((20, 100), "AI Tutor", fill="white")
+            image.save(img_path)
+        subprocess.run(["ffmpeg", "-y", "-loop", "1", "-i", img_path, "-i", audio_path,
+            "-vf", "scale=250:220:force_original_aspect_ratio=increase,crop=250:220,setsar=1",
+            "-r", "30", "-c:v", "libx264", "-threads", "1", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-shortest", final_output_file],
+            check=True, capture_output=True, timeout=600)
+        return f"[Static presenter; Wav2Lip disabled pending CPU benchmark] {audio_file}"
 
     # Command using Wav2Lip inference
     python_exe = sys.executable

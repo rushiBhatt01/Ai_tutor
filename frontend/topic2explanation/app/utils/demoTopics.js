@@ -33,8 +33,12 @@ export const DEMO_TOPICS = [
   "music assistant",
   "Networking devices",
   "NEURAL NETWORK",
+  "NoSQL",
   "open knowledge graph",
+  "playwright",
   "Retrieval Augmented Generation (RAG)",
+  "robotics",
+  "Robotics",
   "solar system",
   "System Design",
   "virtual reality",
@@ -72,22 +76,15 @@ export const findMatchingDemoTopic = (topic) => {
   const normalized = normalizeTopicForCache(topic);
   if (!normalized) return null;
 
-  // Pass 1: exact normalized match
   const exactMatch = DEMO_TOPICS.find(
     (t) => normalizeTopicForCache(t) === normalized
   );
   if (exactMatch) return exactMatch;
 
-  // Pass 2: alphanumeric match
   const alphaKey = toAlphanumericKey(topic);
-  if (alphaKey) {
-    const alphaMatch = DEMO_TOPICS.find(
-      (t) => toAlphanumericKey(t) === alphaKey
-    );
-    if (alphaMatch) return alphaMatch;
-  }
-
-  return null;
+  return (alphaKey && DEMO_TOPICS.find(
+    (t) => toAlphanumericKey(t) === alphaKey
+  )) || null;
 };
 
 /**

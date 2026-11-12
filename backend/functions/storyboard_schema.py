@@ -24,6 +24,11 @@ class Scene(BaseModel):
         max_length=160,
         description="Core educational takeaway for this scene."
     )
+    learning_objective: str = Field(
+        default="",
+        max_length=160,
+        description="What the learner should understand or be able to explain after this scene."
+    )
     narration: str = Field(
         min_length=20,
         max_length=1200,
@@ -33,6 +38,16 @@ class Scene(BaseModel):
         min_length=3,
         max_length=180,
         description="Visual description for image search and CLIP reranking."
+    )
+    must_show: List[str] = Field(
+        default_factory=list,
+        max_length=8,
+        description="Required visual features that retrieved images must depict."
+    )
+    must_not_show: List[str] = Field(
+        default_factory=list,
+        max_length=8,
+        description="Excluded visual features that retrieved images must not depict."
     )
     on_screen_text: str = Field(
         max_length=120,
@@ -45,7 +60,13 @@ class Scene(BaseModel):
     )
     visual_type: str = Field(
         default="slide",
-        description="Visual presentation type: 'slide' (canvas/image slide) or 'manim' (CPU-rendered mathematical/algorithmic animation)."
+        description="Primary visual strategy: 'slide'/'pillow' for generated slides, 'web_image' for real-world photos, "
+                    "'hybrid_image' for slide+photo overlay, 'hybrid_gif' for slide+animated GIF, or 'manim' for algorithm animation."
+    )
+    visual_rationale: Optional[str] = Field(
+        default=None,
+        max_length=240,
+        description="Short explanation for the selected visual strategy."
     )
     manim_spec: Optional[Dict[str, Any]] = Field(
         default=None,

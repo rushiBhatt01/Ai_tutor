@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { BACKEND_URL } from "../utils/backendUrl";
 
 export default function DevModuleConsole() {
   const [activeModule, setActiveModule] = useState("script");
@@ -13,7 +14,7 @@ export default function DevModuleConsole() {
   const [scrapingInput, setScrapingInput] = useState({ query: "Python Code Example" });
   const [sadtalkerInput, setSadtalkerInput] = useState({ character: "Benjamin", forceCpu: false });
 
-  const backendUrl = "http://localhost:8000";
+  const backendUrl = BACKEND_URL;
 
   const runModuleTest = async (modulePath, payload) => {
     setLoading(true);

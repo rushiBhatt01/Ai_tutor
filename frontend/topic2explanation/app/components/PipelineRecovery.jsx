@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { BACKEND_URL } from "../utils/backendUrl";
 
 export default function PipelineRecovery() {
   const [runId, setRunId] = useState("");
@@ -10,7 +11,7 @@ export default function PipelineRecovery() {
   const [logs, setLogs] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const backendUrl = "http://localhost:8000";
+  const backendUrl = BACKEND_URL;
 
   const fetchStatus = async () => {
     if (!runId.trim()) return;
@@ -69,7 +70,7 @@ export default function PipelineRecovery() {
     return () => {
       eventSource.close();
     };
-  }, [runId, runStatus]);
+  }, [runId, runStatus, backendUrl]);
 
   const stages = [
     { id: "script", name: "Script Generation" },

@@ -59,6 +59,8 @@ class PipelineState(TypedDict):
 
     # ── Storyboard ──
     storyboard_json: str  # JSON string of validated Storyboard
+    visual_plan: List[Dict[str, Any]]  # requested strategy and route rationale per scene
+    visual_specs: List[Dict[str, Any]]  # validated, renderer-neutral scene specifications
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -557,6 +559,7 @@ def build_script_graph() -> StateGraph:
     graph.add_node("generate_general_script", generate_general_script)
     graph.add_node("plan_manim_scenes", plan_manim_scenes)
     graph.add_node("generate_storyboard", generate_storyboard)
+    graph.add_node("plan_visuals", plan_visuals)
 
     # Add edges
     graph.add_edge(START, "classify_topic")
@@ -578,10 +581,54 @@ def build_script_graph() -> StateGraph:
     # General path: script → storyboard (skip Manim)
     graph.add_edge("generate_general_script", "generate_storyboard")
 
-    # Storyboard → END
-    graph.add_edge("generate_storyboard", END)
+    # Storyboard → visual plan → END. Rendering waits for audio/run-dir creation downstream.
+    graph.add_edge("generate_storyboard", "plan_visuals")
+    graph.add_edge("plan_visuals", END)
 
     return graph.compile()
+
+
+def plan_visuals(state: PipelineState) -> dict:
+    """Persist per-scene route decisions in graph state after storyboard validation."""
+    from functions.visual_routing import route_storyboard
+
+    storyboard = Storyboard.model_validate_json(state["storyboard_json"])
+    route_storyboard(storyboard)
+    return {
+        "storyboard_json": storyboard.model_dump_json(),
+        "visual_plan": [
+            {
+                "scene_id": scene.scene_id,
+                "strategy": scene.visual_type,
+                "rationale": scene.visual_rationale,
+            }
+            for scene in storyboard.scenes
+        ],
+        "visual_specs": _validated_visual_specs(storyboard),
+    }
+
+
+def _validated_visual_specs(storyboard: Storyboard) -> List[Dict[str, Any]]:
+    """Build the shared VisualSpec contract from routed storyboard scenes."""
+    from functions.visual_spec import validate_visual_spec
+
+    specs = []
+    for scene in storyboard.scenes:
+        spec, repaired = validate_visual_spec({
+            "scene_id": scene.scene_id,
+            "topic": scene.key_concept,
+            "visual_goal": scene.learning_objective or scene.visual_query or scene.key_concept,
+            "visual_type": scene.visual_type if scene.visual_type in {"manim", "web_image", "pillow", "hybrid_image", "hybrid_gif"} else "pillow",
+            "duration_seconds": scene.estimated_seconds,
+            "width": 1280,
+            "height": 720,
+            "fps": 25,
+            "input_data": scene.manim_spec or {"query": scene.visual_query},
+            "must_show": scene.must_show or [scene.key_concept],
+            "must_not_show": scene.must_not_show,
+        })
+        specs.append(spec.model_dump(mode="json"))
+    return specs
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -607,6 +654,8 @@ def run_script_pipeline(
     creativity_level: str,
     humour_level: str,
     character_name: str = "Tutor",
+    *,
+    return_state: bool = False,
 ) -> tuple:
     """
     Run the LangGraph script generation pipeline.
@@ -615,8 +664,8 @@ def run_script_pipeline(
     create_script() + create_storyboard() sequential calls.
 
     Returns:
-        (script_text, storyboard): Tuple of sanitized script string
-        and validated Storyboard Pydantic model.
+        By default, (script_text, storyboard). With return_state=True,
+        returns (script_text, storyboard, final_state).
     """
     print(f"\n{'='*60}")
     print(f"[LangGraph Pipeline] Starting for topic: '{topic_name}'")
@@ -636,6 +685,8 @@ def run_script_pipeline(
         "script_text": "",
         "manim_scenes": [],
         "storyboard_json": "",
+        "visual_plan": [],
+        "visual_specs": [],
     }
 
     # Run the graph synchronously
@@ -655,4 +706,6 @@ def run_script_pipeline(
     print(f"  Manim Scenes: {len(final_state.get('manim_scenes', []))}")
     print(f"{'='*60}\n")
 
+    if return_state:
+        return script_text, storyboard, final_state
     return script_text, storyboard

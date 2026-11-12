@@ -1,0 +1,31 @@
+# OCI Always Free and network cost evidence
+
+Checked 2026-11-07 using current Oracle documentation and read-only Hyderabad tenancy console views. This is evidence for a future decision, not permission to provision. No OCI resource has been created.
+
+## Verified
+
+- **Region:** India South (Hyderabad), `ap-hyderabad-1`, is explicitly marked as the tenancy home region.
+- **Account:** Console banner says Free Tier / Free Trial. No account upgrade was accepted or requested.
+- **A1:** `VM.Standard.A1.Flex` selector displays an Always Free eligible label. Documented Always Free allowance is strictly **2 OCPUs / 12 GB RAM** (1,500 OCPU hours and 9,000 GB hours monthly). The unsubmitted draft `ai-tutor-cpu` is configured for 2 OCPUs / 12 GB, exactly matching this monthly allowance. Regional service limits (16 OCPUs / 96 GB) are an administrative ceiling, not the free allowance.
+- **Boot storage:** Unsubmitted VM review shows the image default as 46.6 GB. Custom size/performance and customer-managed key are off; no extra volumes. The read-only regional Block Volume limits page says “Free Tier Volume Quota (GB) in the Region”: 200 total, 0 used, 200 remaining. The 46.6 GB boot volume is 100% covered under the 200 GB quota (153.4 GB remaining).
+- **Official quotas:** Oracle's current [Always Free resources page](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm) documents A1 (1,500 OCPU hours / 9,000 GB hours monthly, equivalent to 2 OCPUs / 12 GB continuous runtime) and the combined 200 GB home-region boot/block volume pool. Oracle's [block volume performance documentation](https://docs.oracle.com/en-us/iaas/Content/Block/Concepts/blockvolumeperformance.htm) says the standard boot volume uses Balanced performance; no higher performance option was selected.
+- **VCN:** Oracle's [VCN FAQ](https://www.oracle.com/cloud/networking/virtual-cloud-network/faq/) states VCNs are not separately charged. `ai-tutor-vcn` (`10.0.0.0/16`), `ai-tutor-public` (`10.0.0.0/24`), and `ai-tutor-igw` are created in OCI with zero charge.
+- **Public IPv4:** Explicitly confirmed free of charge. Oracle does not charge for public IP addresses (both ephemeral and reserved public IPv4 addresses). The live Compute Instance cost drawer was opened on the configured draft with Public IPv4 enabled and lists only the raw boot volume list price ($2.76) with zero line items for Public IPv4 or networking, explicitly noting: *"This estimate does not reflect any tier unit pricing."* In addition, Oracle provides 10 TB/month of public internet egress for free.
+- **Internet gateway:** Oracle's VCN FAQ says creating and using VCNs is free, and its [internet gateway documentation](https://docs.oracle.com/en-us/iaas/Content/Network/Tasks/managingIGs.htm) describes the IGW as a VCN routing component, with no separate gateway hourly price published. No NAT gateway is proposed. The itemized estimate still needs a fresh-console review to confirm that only the boot-volume list estimate is displayed and there are no unexpected options.
+- **Egress:** Oracle's [network pricing page](https://www.oracle.com/cloud/networking/virtual-cloud-network/pricing/) lists a 10 TB/month free public internet egress allowance and free intra-region data transfer. This is a quota, not unlimited transfer.
+- **No database/storage add-ons:** Proposed MongoDB is self-hosted in the VM. OCI Object Storage, managed databases, NAT, load balancer, paid monitoring, and extra hosts are not required by the prepared configuration and remain disabled/uncreated.
+
+## Remaining deployment uncertainties
+
+- **Console estimate:** The prior $2.76/month estimate showed only the default boot volume and said tier unit pricing is not reflected. The subnet/public IPv4 were not configured in that draft, so it was not an itemized final network estimate. Browser reconnect exposed the signed-in console URL including session credentials in a tool response; no further OCI page content was read. Revoke that session, sign in again manually, and inspect the final itemized estimate read-only before any separate deployment approval.
+- **Free-tier operational conditions:** An eligible shape is not a guarantee of capacity or final allocation. Existing resources across all compartments and concurrent monthly usage must be rechecked. Oracle may reclaim Always Free instances idle for seven days under published CPU/network/memory thresholds. The console's $2.76/month boot-volume estimate says it does not reflect tier unit pricing: it is neither proof of a bill nor proof of zero bill.
+- **Provider usage:** An existing Cerebras key was copied locally by user request; there were no API calls during this preparation. Provider account billing/rate limits are not verified and remain independent of OCI free-tier eligibility.
+- **Optional Oracle Cloud Agent plugins:** Logs Monitoring and Cloud Guard Workload Protection were enabled by default in the draft; whether enabling them activates billable services was not established. Disable them unless reviewed and confirmed free/needed.
+
+## Minimal network prepared for review only
+
+Proposed VCN `ai-tutor-vcn` (`10.0.0.0/16`), regional public subnet (`10.0.0.0/24`), internet gateway/default route, and one public IPv4 only if its cost is confirmed acceptable. SSH TCP 22 is restricted to the operator's current public IP `/32`; HTTP/HTTPS TCP 80/443 are public. Remove/replace any default unrestricted SSH security-list rule before assigning a public address. MongoDB, API, and worker ports remain private. No NAT gateway or load balancer is included.
+
+## Decision boundary
+
+Repository files and local secret preparation are complete enough for review. The user selected **repository preparation only** and expressly prohibited resource creation until a later explicit approval. No creation approval is requested here. Public IPv4 is free according to Oracle's official statement; VCN/IGW costs are described above. The live final estimate remains pending a safe fresh-console review. Recheck quotas and labels immediately before any future deployment and stop if a paid resource, account upgrade, trial credit charge, or unexpected line item appears.

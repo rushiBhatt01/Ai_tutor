@@ -1,0 +1,35 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environments
+.venv/
+env/
+venv/
+
+# Ignore Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+netlify.toml
+
+# Ignore frontend build artifacts
+frontend/build/
+frontend/.next/
+out/
+package-lock.json
+
+# Ignore system/IDE files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Ignore Git metadata
+.git
+.gitignore

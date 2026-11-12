@@ -1,10 +1,12 @@
 import os
 import json
 import uuid
+import re
+from deployment_settings import redact_secrets
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-RUNS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../runs"))
+RUNS_DIR = os.path.abspath(os.getenv("RUNS_DIR", os.path.join(os.path.dirname(__file__), "../runs")))
 
 PIPELINE_STAGES = [
     "script",
@@ -16,8 +18,18 @@ PIPELINE_STAGES = [
     "validation"
 ]
 
+
+def canonical_stage(stage: str) -> str:
+    """Preserve the legacy avatar checkpoint ID across renderer changes."""
+    return "sadtalker" if stage == "wav2lip" else stage
+
 def get_run_dir(run_id: str) -> str:
-    return os.path.join(RUNS_DIR, run_id)
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,95}", run_id):
+        raise ValueError("Invalid run ID")
+    path = os.path.realpath(os.path.join(RUNS_DIR, run_id))
+    if os.path.commonpath([os.path.realpath(RUNS_DIR), path]) != os.path.realpath(RUNS_DIR):
+        raise ValueError("Run path escapes configured root")
+    return path
 
 def get_checkpoint_path(run_id: str) -> str:
     return os.path.join(get_run_dir(run_id), "checkpoint.json")
@@ -64,7 +76,15 @@ def load_checkpoint(run_id: str) -> Optional[Dict[str, Any]]:
         return None
     try:
         with open(cp_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            checkpoint = json.load(f)
+        stages = checkpoint.setdefault("stages", {})
+        alias = stages.get("wav2lip")
+        canonical = stages.get("sadtalker")
+        if alias and (not canonical or canonical.get("status") == "PENDING"):
+            stages["sadtalker"] = alias.copy()
+        if checkpoint.get("current_stage") == "wav2lip":
+            checkpoint["current_stage"] = "sadtalker"
+        return checkpoint
     except Exception as e:
         print(f"Error loading checkpoint for {run_id}: {e}")
         return None
@@ -107,6 +127,8 @@ def update_stage_status(
     error: Optional[str] = None,
     chunk_id: Optional[str] = None
 ):
+    error = redact_secrets(error) if error else None
+    stage = canonical_stage(stage)
     cp = load_checkpoint(run_id)
     if not cp:
         return
@@ -142,9 +164,13 @@ def update_stage_status(
         cp["resumability_status"] = "RESUMABLE"
         cp["execution_lock"] = False
 
+    if stage == "sadtalker" and "wav2lip" in cp["stages"]:
+        cp["stages"]["wav2lip"] = stage_info.copy()
+
     save_checkpoint(run_id, cp)
 
 def append_event_log(run_id: str, stage: str, level: str, message: str, progress: Optional[int] = None, chunk_id: Optional[str] = None):
+    stage = canonical_stage(stage)
     run_dir = get_run_dir(run_id)
     log_file = os.path.join(run_dir, "logs", "events.jsonl")
     event = {
@@ -152,7 +178,7 @@ def append_event_log(run_id: str, stage: str, level: str, message: str, progress
         "stage": stage,
         "chunk_id": chunk_id,
         "level": level,
-        "message": message,
+        "message": redact_secrets(message),
         "progress": progress,
         "timestamp": datetime.now().isoformat()
     }

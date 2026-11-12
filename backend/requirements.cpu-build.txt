@@ -1,0 +1,7 @@
+# PEP 517 build backend for locked ARM64 sdists without isolated, unpinned builds.
+setuptools==80.9.0
+wheel==0.45.1
+Cython==3.0.12
+meson-python==0.17.1
+meson==1.7.0
+pyproject-metadata==0.9.1

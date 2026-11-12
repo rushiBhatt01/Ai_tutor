@@ -8,6 +8,7 @@ import json
 from bson import ObjectId
 from db import set_cached_video
 from media_store import upload_file
+from functions.visual_artifacts import manifest_video_paths
 
 
 def match_chunk_videos(character_folder, image_folder):
@@ -89,20 +90,20 @@ async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
     video2_folder = f"{timestamp}/image_videos"
 
     chunk_pairs = match_chunk_videos(video1_folder, video2_folder)
+    manifest_video_paths(timestamp, expected_ids=[chunk_id for chunk_id, _, _ in chunk_pairs])
 
     clips = []
     for i, (chunk_id, v1_path, v2_path) in enumerate(chunk_pairs):
         out_path = f"{timestamp}/temp_{i}.mp4"
 
-        # Always use overlay placement for the character/video instead of side-by-side.
-        # Keep a small foreground (character) over the main background image video.
-        scenario = random.choice([3, 4])
-        overlay_pos = "x=0:y=H-h" if scenario == 3 else "x=W-w-10:y=H-h"
-
+        # Coordinated PIP Presenter Window:
+        # Scale foreground presenter video to 250x220, perfectly fitting the dedicated
+        # presenter slot at [965, 435, 1220, 660] on the slide canvas.
+        # This guarantees zero collision/overlap with media (y=105..415) and text cards (x=60..700).
         filter_graph = (
             "[0:v]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720[bg];"
-            "[1:v]scale=320:360:force_original_aspect_ratio=increase,crop=320:360[fg];"
-            f"[bg][fg]overlay={overlay_pos}[v]"
+            "[1:v]scale=250:220:force_original_aspect_ratio=increase,crop=250:220[fg];"
+            "[bg][fg]overlay=x=968:y=438[v]"
         )
 
         subprocess.run([
@@ -110,7 +111,7 @@ async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
             "-i", v2_path, "-i", v1_path,  # big first, small second
             "-filter_complex", filter_graph,
             "-map", "[v]", "-map", "1:a",  # only audio from video1 (second input here)
-            "-c:v", "libx264", "-c:a", "aac",
+            "-c:v", "libx264", "-threads", "1", "-r", "30", "-pix_fmt", "yuv420p", "-c:a", "aac",
             "-shortest", out_path
         ], check=True)
 
@@ -131,6 +132,10 @@ async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
         "-i", concat_list_path,
         "-c", "copy", final_video_path
     ], check=True)
+    if os.getenv("PIPELINE_JOB_MODE", "false").lower() == "true":
+        # The worker publishes through the generic artifact adapter. Avoid
+        # duplicating final binaries in GridFS or writing into frontend assets.
+        return f"local:{os.path.abspath(final_video_path)}"
     env = os.getenv("ENVIRONMENT", "local")
     # Delay (in seconds) before making the cache entry visible to frontend
     if override_delay_seconds is not None:

@@ -39,48 +39,26 @@ def find_cached_video(topic_name: str) -> dict:
     target_alpha = alphanumeric_key(topic_name)
     cache_dirs = get_cache_dirs()
 
-    # Pass 1: Exact / Case-insensitive stem match
-    for cdir in cache_dirs:
-        if not os.path.isdir(cdir):
+    # Keep exact matches ahead of fuzzy matches across all cache directories.
+    for key, target in ((normalize_topic_name, target_clean), (alphanumeric_key, target_alpha)):
+        if key is alphanumeric_key and not target:
             continue
-        try:
-            for fname in os.listdir(cdir):
-                if fname.startswith("."):
-                    continue
-                if fname.lower().endswith(".mp4"):
-                    stem = fname[:-4].strip()
-                    if normalize_topic_name(stem) == target_clean:
-                        full_path = os.path.join(cdir, fname)
-                        return {
-                            "exists": True,
-                            "topic": stem,
-                            "filename": fname,
-                            "path": full_path,
-                            "url": f"/prev_videos/{fname}"
-                        }
-        except Exception as e:
-            print(f"Warning: error reading cache dir {cdir}: {e}")
-
-    # Pass 2: Alphanumeric match (handles differences in punctuation like parentheses, periods, etc.)
-    if target_alpha:
         for cdir in cache_dirs:
             if not os.path.isdir(cdir):
                 continue
             try:
                 for fname in os.listdir(cdir):
-                    if fname.startswith("."):
+                    if fname.startswith(".") or not fname.lower().endswith(".mp4"):
                         continue
-                    if fname.lower().endswith(".mp4"):
-                        stem = fname[:-4].strip()
-                        if alphanumeric_key(stem) == target_alpha:
-                            full_path = os.path.join(cdir, fname)
-                            return {
-                                "exists": True,
-                                "topic": stem,
-                                "filename": fname,
-                                "path": full_path,
-                                "url": f"/prev_videos/{fname}"
-                            }
+                    stem = fname[:-4].strip()
+                    if key(stem) == target:
+                        return {
+                            "exists": True,
+                            "topic": stem,
+                            "filename": fname,
+                            "path": os.path.join(cdir, fname),
+                            "url": f"/prev_videos/{fname}"
+                        }
             except Exception as e:
                 print(f"Warning: error reading cache dir {cdir}: {e}")
 

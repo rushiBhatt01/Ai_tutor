@@ -1,4 +1,5 @@
-import { getDemoTopicFilename, findMatchingDemoTopic } from "./demoTopics";
+import { getDemoTopicFilename } from "./demoTopics";
+import { backendUrl } from "./backendUrl";
 
 /**
  * Resolve a cached video URL if it exists in prev_videos.
@@ -23,20 +24,18 @@ export const resolveCachedVideoUrl = async (topic) => {
     try {
       const candidateUrl = `/prev_videos/${encodeURIComponent(clean + ".mp4")}`;
       const res = await fetch(candidateUrl, { method: "HEAD" });
-      if (res.ok) {
-        return candidateUrl;
-      }
+      if (res.ok) return candidateUrl;
     } catch {
       // Ignore static fetch errors
     }
 
     // 3. Try backend checkVideoCache endpoint
     try {
-      const backendUrl = `http://127.0.0.1:8000/checkVideoCache/${encodeURIComponent(clean)}`;
+      const cacheUrl = backendUrl(`/checkVideoCache/${encodeURIComponent(clean)}`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1500);
 
-      const res = await fetch(backendUrl, { signal: controller.signal });
+      const res = await fetch(cacheUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
 
       if (res.ok) {
@@ -58,8 +57,7 @@ export const resolveCachedVideoUrl = async (topic) => {
  */
 export const checkCachedVideoExists = async (topic) => {
   try {
-    const url = await resolveCachedVideoUrl(topic);
-    return Boolean(url);
+    return Boolean(await resolveCachedVideoUrl(topic));
   } catch (error) {
     console.warn(`Failed to check cached video for topic "${topic}":`, error);
     return false;

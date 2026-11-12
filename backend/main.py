@@ -2,36 +2,86 @@ from fastapi import FastAPI, HTTPException, Request, Depends, Header
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
-from functions.video_main_function import video_main
 from functions.cache_utils import find_cached_video, list_all_cached_videos
 from functions.checkpoint_manager import load_checkpoint, get_run_dir, acquire_lock, release_lock
 from functions.dag_evaluator import evaluate_run_dag
-from functions.create_script_function import create_script
-from functions.create_speech_function import create_speech
-from functions.get_image_function import get_image
-from functions.generate_queries_function import generate_image_queries
-from functions.create_video_from_audio_function import create_video_from_audio
-from functions.create_image_videos_function import create_image_videos
-from functions.combine_videos_function import combine_videos
 from media_store import stream_chunks
 from bson import ObjectId
 import os
 import json
 import asyncio
 import uuid
+import base64
+import binascii
+import secrets
+import time
+from starlette.concurrency import run_in_threadpool
 from dotenv import load_dotenv
 
 # Load environment variables
 base_dir = os.path.dirname(__file__)
 load_dotenv(os.path.join(base_dir, ".env"))
 
-app = FastAPI(title="AI Video Tutorial Generator API")
+from deployment_settings import RuntimeSettings
+from jobs_api import router as jobs_router, submit_lesson
+
+settings = RuntimeSettings().validate()
+app = FastAPI(title="AI Video Tutorial Generator API",
+              openapi_url=None if settings.production else "/openapi.json")
+app.include_router(jobs_router)
 security = HTTPBasic()
+
+
+async def video_main(*args, **kwargs):
+    # Keep the API process light; torch/Manim load only in the rendering process.
+    from functions.video_main_function import video_main as generate
+    return await generate(*args, **kwargs)
+
+
+@app.middleware("http")
+async def production_boundary(request: Request, call_next):
+    if settings.production:
+        if request.url.path.startswith("/api/dev/"):
+            return JSONResponse({"detail": "Not found"}, status_code=404)
+        if request.url.path not in {"/healthz", "/readyz"}:
+            valid = False
+            try:
+                scheme, token = request.headers.get("authorization", "").split(" ", 1)
+                username, password = base64.b64decode(token, validate=True).decode("utf-8").split(":", 1)
+                valid = (scheme.lower() == "basic" and
+                    secrets.compare_digest(username.encode(), settings.username.encode()) and
+                    secrets.compare_digest(password.encode(), settings.password.encode()))
+            except (ValueError, UnicodeError, binascii.Error):
+                pass
+            if not valid:
+                return JSONResponse({"detail": "Authentication required"}, status_code=401,
+                                    headers={"WWW-Authenticate": 'Basic realm="AI Tutor"'})
+    return await call_next(request)
+
+
+@app.get("/healthz")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+async def readiness():
+    if not settings.queued:
+        return {"status": "ok", "queue": "disabled"}
+    try:
+        heartbeat = settings.state_dir / "worker.heartbeat"
+        if time.time() - heartbeat.stat().st_mtime > 30:
+            raise RuntimeError("worker not ready")
+        from db import get_db
+        await get_db().command("ping")
+        return {"status": "ok", "queue": "ready"}
+    except Exception:
+        return JSONResponse({"status": "unavailable"}, status_code=503)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[s.strip() for s in os.getenv("CORS_ORIGINS", "" if settings.production else "*").split(",") if s.strip()],
+    allow_credentials=settings.production,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -43,7 +93,7 @@ def verify_dev_token(x_dev_token: str = Header(None)):
     env = os.getenv("ENVIRONMENT", "local")
     if env == "local":
         return True
-    if x_dev_token != expected_token:
+    if not x_dev_token or not secrets.compare_digest(x_dev_token, expected_token):
         raise HTTPException(status_code=403, detail="Developer access denied: invalid X-Dev-Token")
     return True
 
@@ -51,9 +101,13 @@ def verify_dev_token(x_dev_token: str = Header(None)):
 
 @app.post("/videoCreate")
 async def create_insights(request: Request, credentials: HTTPBasicCredentials = Depends(security)):
-    if credentials.username != "myusername" or credentials.password != "mypassword":
+    if (not secrets.compare_digest(credentials.username.encode(), settings.username.encode()) or
+            not secrets.compare_digest(credentials.password.encode(), settings.password.encode())):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     data = await request.json()
+    if settings.queued:
+        result = await run_in_threadpool(submit_lesson, data, request.headers.get("Idempotency-Key"))
+        return JSONResponse(result, status_code=202)
     message = data['message']
     level = data['level']
     age = data['age']
@@ -116,6 +170,9 @@ async def get_run_status(run_id: str):
 
 @app.post("/api/pipeline/runs/{run_id}/resume")
 async def resume_pipeline_run(run_id: str, request: Request):
+    if settings.queued:
+        from jobs_api import retry_job
+        return JSONResponse(await run_in_threadpool(retry_job, run_id), status_code=202)
     cp = load_checkpoint(run_id)
     if not cp:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
@@ -170,6 +227,7 @@ async def stream_run_events(run_id: str):
 
 @app.post("/api/dev/modules/script/test")
 async def dev_test_script(request: Request, authorized: bool = Depends(verify_dev_token)):
+    from functions.create_script_function import create_script
     data = await request.json()
     topic = data.get("topic", "Quantum Computing")
     level = data.get("level", "intermediate")
@@ -178,6 +236,7 @@ async def dev_test_script(request: Request, authorized: bool = Depends(verify_de
 
 @app.post("/api/dev/modules/speech/test")
 async def dev_test_speech(request: Request, authorized: bool = Depends(verify_dev_token)):
+    from functions.create_speech_function import create_speech
     data = await request.json()
     text = data.get("text", "Hello, welcome to this tutorial.")
     character = data.get("character", "Benjamin")
@@ -193,6 +252,7 @@ async def dev_test_speech(request: Request, authorized: bool = Depends(verify_de
 
 @app.post("/api/dev/modules/scrapling/test")
 async def dev_test_scrapling(request: Request, authorized: bool = Depends(verify_dev_token)):
+    from functions.get_image_function import get_image
     data = await request.json()
     query = data.get("query", "Python Programming Logo")
     
@@ -207,6 +267,8 @@ async def dev_test_scrapling(request: Request, authorized: bool = Depends(verify
 @app.post("/api/dev/modules/wav2lip/test")
 @app.post("/api/dev/modules/sadtalker/test")
 async def dev_test_wav2lip(request: Request, authorized: bool = Depends(verify_dev_token)):
+    from functions.create_speech_function import create_speech
+    from functions.create_video_from_audio_function import create_video_from_audio
     data = await request.json()
     character = data.get("character", "Benjamin")
     force_cpu = data.get("force_cpu", False)

@@ -5,6 +5,7 @@ import subprocess
 from PIL import Image
 from typing import Dict, Any, Tuple, Optional
 from functions.checkpoint_manager import load_checkpoint, save_checkpoint, get_run_dir, PIPELINE_STAGES
+from functions.visual_artifacts import manifest_video_paths
 
 MIN_AUDIO_BYTES = 1000
 MIN_IMAGE_BYTES = 6000
@@ -68,7 +69,7 @@ def evaluate_run_dag(run_id: str) -> Tuple[Optional[str], Dict[str, Any]]:
     cascading_triggered = False
 
     for stage_name in PIPELINE_STAGES:
-        stage_info = stages.get(stage_name, {"status": "PENDING"})
+        stage_info = stages.setdefault(stage_name, {"status": "PENDING", "attempts": 0, "chunks": {}})
         current_status = stage_info.get("status", "PENDING")
 
         # If an earlier stage was invalidated, cascade invalidation downstream
@@ -79,10 +80,12 @@ def evaluate_run_dag(run_id: str) -> Tuple[Optional[str], Dict[str, Any]]:
                 first_invalid_or_incomplete = stage_name
             continue
 
-        if current_status == "PENDING":
+        if current_status in ("PENDING", "RUNNING", "INVALID"):
             if not first_invalid_or_incomplete:
                 first_invalid_or_incomplete = stage_name
-            report["stage_checks"][stage_name] = {"valid": False, "reason": "Pending execution"}
+            report["stage_checks"][stage_name] = {"valid": False, "reason": f"Stage requires execution: {current_status}"}
+            if current_status == "INVALID":
+                cascading_triggered = True
             continue
 
         if current_status == "FAILED":
@@ -156,11 +159,17 @@ def evaluate_run_dag(run_id: str) -> Tuple[Optional[str], Dict[str, Any]]:
                 stage_valid = False
                 reason = "No slide video clips found"
             else:
-                for sv in svideos:
-                    if not validate_video_file(os.path.join(slide_video_dir, sv)):
-                        stage_valid = False
-                        reason = f"Corrupt slide video clip {sv}"
-                        break
+                try:
+                    manifested = manifest_video_paths(run_dir, expected_ids=[os.path.splitext(sv)[0] for sv in svideos])
+                    if manifested is None:
+                        for sv in svideos:
+                            if not validate_video_file(os.path.join(slide_video_dir, sv)):
+                                stage_valid = False
+                                reason = f"Corrupt slide video clip {sv}"
+                                break
+                except Exception as error:
+                    stage_valid = False
+                    reason = f"Visual manifest integrity failed: {error}"
 
         elif stage_name == "validation":
             final_mp4 = os.path.join(run_dir, "final_video.mp4")

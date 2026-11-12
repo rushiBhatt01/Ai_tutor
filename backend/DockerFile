@@ -6,7 +6,8 @@ WORKDIR /app
 # Install dependencies first
 COPY backend/requirements.txt .
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg && \
+    apt-get install -y --no-install-recommends \
+      ffmpeg bubblewrap build-essential pkg-config python3-dev libcairo2-dev libpango1.0-dev && \
     rm -rf /var/lib/apt/lists/* && \
     pip install --no-cache-dir -r requirements.txt
 

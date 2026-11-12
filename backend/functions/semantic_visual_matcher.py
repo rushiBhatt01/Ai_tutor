@@ -19,9 +19,20 @@ def _load_model() -> tuple[CLIPModel, CLIPProcessor]:
     global _model, _processor
     if _model is None or _processor is None:
         _processor = CLIPProcessor.from_pretrained(_MODEL_NAME)
-        _model = CLIPModel.from_pretrained(_MODEL_NAME).to(_device)
+        _model = CLIPModel.from_pretrained(_MODEL_NAME, use_safetensors=True).to(_device)
         _model.eval()
     return _model, _processor
+
+
+def _extract_tensor(features) -> torch.Tensor:
+    """Normalize features output across transformers versions (Tensor or BaseModelOutputWithPooling)."""
+    if hasattr(features, "pooler_output") and features.pooler_output is not None:
+        return features.pooler_output
+    if hasattr(features, "last_hidden_state") and features.last_hidden_state is not None:
+        return features.last_hidden_state[:, 0]
+    if isinstance(features, (tuple, list)):
+        return features[0]
+    return features
 
 
 def rank_images(query: str, image_paths: list[str]) -> list[tuple[str, float]]:
@@ -49,8 +60,50 @@ def rank_images(query: str, image_paths: list[str]) -> list[tuple[str, float]]:
         image_features = model.get_image_features(**{
             name: value for name, value in inputs.items() if name == "pixel_values"
         })
+        text_features = _extract_tensor(text_features)
+        image_features = _extract_tensor(image_features)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         scores = (image_features @ text_features.T).squeeze(1).cpu().tolist()
 
     return sorted(zip(valid_paths, (float(score) for score in scores)), key=lambda item: item[1], reverse=True)
+
+
+def score_visual_features(image_paths: list[str], features: list[str]) -> dict[str, dict[str, float]]:
+    """Score each required/excluded visual feature against every downloaded image."""
+    features = list(dict.fromkeys(str(feature).strip()[:160] for feature in features if str(feature).strip()))
+    if not features:
+        return {str(path): {} for path in image_paths}
+
+    valid_paths: list[str] = []
+    images: list[Image.Image] = []
+    for image_path in image_paths:
+        try:
+            with Image.open(image_path) as image:
+                images.append(image.convert("RGB"))
+            valid_paths.append(str(image_path))
+        except (OSError, ValueError):
+            continue
+    if not valid_paths:
+        return {}
+
+    prompts = [f"A clear educational image showing {feature}." for feature in features]
+    model, processor = _load_model()
+    inputs = processor(text=prompts, images=images, return_tensors="pt", padding=True)
+    inputs = {name: value.to(_device) for name, value in inputs.items()}
+    with torch.inference_mode():
+        text_features = model.get_text_features(**{
+            name: value for name, value in inputs.items() if name in {"input_ids", "attention_mask"}
+        })
+        image_features = model.get_image_features(**{
+            name: value for name, value in inputs.items() if name == "pixel_values"
+        })
+        text_features = _extract_tensor(text_features)
+        image_features = _extract_tensor(image_features)
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+        scores = (image_features @ text_features.T).cpu().tolist()
+    return {
+        path: {feature: float(score) for feature, score in zip(features, image_scores)}
+        for path, image_scores in zip(valid_paths, scores)
+    }

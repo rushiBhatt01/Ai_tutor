@@ -26,6 +26,7 @@ soundfile>=0.12.1
 
 # Video Processing
 moviepy>=1.0.3
+manim>=0.18,<0.20
 imageio>=2.33.1
 imageio-ffmpeg>=0.4.9
 ffmpeg-python>=0.2.0

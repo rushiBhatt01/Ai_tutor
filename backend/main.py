@@ -3,6 +3,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from functions.video_main_function import video_main
+from functions.cache_utils import find_cached_video, list_all_cached_videos
 from functions.checkpoint_manager import load_checkpoint, get_run_dir, acquire_lock, release_lock
 from functions.dag_evaluator import evaluate_run_dag
 from functions.create_script_function import create_script
@@ -84,16 +85,19 @@ async def create_insights(request: Request, credentials: HTTPBasicCredentials = 
 @app.get("/checkVideoCache/{topic_name}")
 async def check_video_cache(topic_name: str):
     try:
-        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/topic2explanation/public/prev_videos"))
-        file_path = os.path.join(frontend_cache_dir, f"{topic_name}.mp4")
-        exists = os.path.exists(file_path)
-        return {
-            "exists": exists,
-            "filename": f"{topic_name}.mp4" if exists else None,
-            "path": file_path if exists else None
-        }
+        cached = find_cached_video(topic_name)
+        return cached
     except Exception as e:
         return {"exists": False, "error": str(e)}
+
+@app.get("/prevVideos")
+@app.get("/api/videos/list")
+async def list_previous_videos():
+    try:
+        videos = list_all_cached_videos()
+        return {"status": "SUCCESS", "count": len(videos), "videos": videos}
+    except Exception as e:
+        return {"status": "ERROR", "error": str(e), "videos": []}
 
 # ── Universal Pipeline Recovery API ───────────────────────────────────────────
 
@@ -215,4 +219,33 @@ async def dev_test_wav2lip(request: Request, authorized: bool = Depends(verify_d
         
     results = create_video_from_audio(dev_dir, character, cpu_mode=force_cpu)
     return {"module": "wav2lip", "results": results, "force_cpu": force_cpu}
+
+
+@app.post("/api/dev/modules/manim/test")
+async def dev_test_manim(request: Request, authorized: bool = Depends(verify_dev_token)):
+    from functions.manim_renderer import render_scene_manim
+    data = await request.json() if request.headers.get("content-type") == "application/json" else {}
+    topic_type = data.get("topic_type", "bfs")
+    scene_title = data.get("scene_title", "BFS Traversal Demo")
+    steps = data.get("steps", ["A", "B", "C", "D", "E"])
+
+    temp_dir = os.path.join("runs", "dev_sandbox", f"manim_{uuid.uuid4().hex[:8]}")
+    os.makedirs(os.path.join(temp_dir, "audio"), exist_ok=True)
+
+    spec = {
+        "topic_type": topic_type,
+        "scene_title": scene_title,
+        "steps": steps,
+        "params": data.get("params", {})
+    }
+
+    video_path = render_scene_manim(spec, "seg_0", temp_dir)
+    return {
+        "module": "manim",
+        "topic_type": topic_type,
+        "video_path": video_path,
+        "exists": os.path.exists(video_path),
+        "file_size": os.path.getsize(video_path) if os.path.exists(video_path) else 0
+    }
+
 

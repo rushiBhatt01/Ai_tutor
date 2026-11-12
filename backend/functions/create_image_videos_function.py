@@ -65,6 +65,11 @@ def create_image_videos(timestamp):
         audio_path = audio_map[chunk_id]
         output_path = os.path.join(output_folder, f"{chunk_id}.mp4")
 
+        # Skip re-rendering if pre-rendered video already exists (e.g., from Manim)
+        if os.path.isfile(output_path) and os.path.getsize(output_path) > 1000:
+            print(f"[{idx + 1}/{total_files}] [OK] Reusing pre-rendered video (Manim): {output_path}")
+            continue
+
         try:
             image_input = (
                 ffmpeg

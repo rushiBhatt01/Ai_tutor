@@ -104,11 +104,12 @@ def generate_cerebras_completion(
 
     messages.append({"role": "user", "content": prompt})
 
+    effective_max_tokens = max(max_tokens, 1500) if "gpt-oss" in chosen_model.lower() else max_tokens
     kwargs: Dict[str, Any] = {
         "model": chosen_model,
         "messages": messages,
         "temperature": temperature,
-        "max_tokens": max_tokens,
+        "max_tokens": effective_max_tokens,
     }
 
     if json_mode:

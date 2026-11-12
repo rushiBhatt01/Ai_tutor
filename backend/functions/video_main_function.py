@@ -8,15 +8,18 @@ from bson import ObjectId
 from functions.create_audio_image_function import create_audio_image
 from functions.create_script_function import create_script
 from functions.create_storyboard_function import create_storyboard
+from functions.langgraph_pipeline import run_script_pipeline
 from functions.create_video_from_audio_function import create_video_from_audio
 from functions.create_image_videos_function import create_image_videos
+from functions.visual_artifacts import atomic_output
+from functions.visual_pipeline_graph import run_visual_pipeline
 from functions.combine_videos_function import combine_videos
+from functions.cache_utils import find_cached_video
 from functions.checkpoint_manager import (
     init_run, load_checkpoint, update_stage_status, append_event_log,
-    release_lock, get_run_dir
+    release_lock, get_run_dir, PIPELINE_STAGES, canonical_stage
 )
 from functions.dag_evaluator import evaluate_run_dag
-from db import get_cached_video
 from media_store import upload_file
 
 async def video_main(
@@ -33,10 +36,10 @@ async def video_main(
 ):
     # Check cache first for standard runs if no explicit run_id is given
     if not run_id:
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/topic2explanation/public"))
-        prev_videos_path = os.path.join(base_dir, "prev_videos", f"{topic_name}.mp4")
-        if os.path.exists(prev_videos_path):
-            print(f"Found cached video in prev_videos for topic '{topic_name}': {prev_videos_path}")
+        cached = find_cached_video(topic_name)
+        if cached and cached.get("exists"):
+            prev_videos_path = cached["path"]
+            print(f"🎬 Found cached video in prev_videos for topic '{topic_name}': {prev_videos_path}")
             if pipeline_delay_ms is not None:
                 try:
                     wait_s = int((int(pipeline_delay_ms) + 999) / 1000)
@@ -58,53 +61,67 @@ async def video_main(
         start_stage = eval_stage if eval_stage != "COMPLETED" else "script"
         append_event_log(run_id, start_stage, "INFO", f"Evaluated starting stage for run: {start_stage}")
 
-    stages_order = ["script", "storyboard", "audio_tts", "scrapling_images", "wav2lip", "sadtalker", "stitching", "validation"]
-    start_index = 0
-    for idx, stg in enumerate(stages_order):
-        if stg == start_stage or (start_stage == "sadtalker" and stg == "wav2lip"):
-            start_index = idx
-            break
+    stages_order = PIPELINE_STAGES
+    start_stage = canonical_stage(start_stage)
+    if start_stage not in stages_order:
+        release_lock(run_id)
+        raise ValueError(f"Unknown pipeline stage: {start_stage}")
+    start_index = stages_order.index(start_stage)
+    current_stg = start_stage
 
     script_text = ""
     storyboard = None
+    visual_plan = []
+    visual_specs = []
     script_file = os.path.join(run_dir, "artifacts", "script.json")
     storyboard_file = os.path.join(run_dir, "artifacts", "storyboard.json")
+    visual_plan_file = os.path.join(run_dir, "artifacts", "visual_plan.json")
 
     try:
-        # ── 1. Script Generation Stage ──
-        if start_index <= stages_order.index("script"):
+        # ── 1+2. LangGraph Script + Storyboard Pipeline ──
+        # Replaces the old sequential create_script() → create_storyboard()
+        # with a stateful graph: classify → script → (manim plan?) → storyboard
+        if start_index <= stages_order.index("storyboard"):
+            current_stg = "script"
             update_stage_status(run_id, "script", "RUNNING")
-            append_event_log(run_id, "script", "INFO", f"Generating tutorial script for topic '{topic_name}'", progress=10)
-            script_text = create_script(topic_name, level_of_explanation, age, creativity_level, humour_level, character_name)
-            
+            append_event_log(run_id, "script", "INFO", f"[LangGraph] Starting script+storyboard pipeline for '{topic_name}'", progress=10)
+
+            script_text, storyboard, graph_state = run_script_pipeline(
+                topic_name=topic_name,
+                level_of_explanation=level_of_explanation,
+                age=age,
+                creativity_level=creativity_level,
+                humour_level=humour_level,
+                character_name=character_name,
+                return_state=True,
+            )
+            visual_plan = graph_state.get("visual_plan", [])
+            visual_specs = graph_state.get("visual_specs", [])
+
+            # Persist script artifact
             with open(script_file, "w", encoding="utf-8") as f:
                 json.dump({"topic": topic_name, "script": script_text}, f, indent=2)
-            
-            update_stage_status(run_id, "script", "COMPLETED")
-            append_event_log(run_id, "script", "INFO", "Script generation completed", progress=15)
-        else:
-            if os.path.exists(script_file):
-                with open(script_file, "r", encoding="utf-8") as f:
-                    script_text = json.load(f).get("script", "")
 
-        # ── 2. Storyboard Planning Stage ──
-        if start_index <= stages_order.index("storyboard"):
-            update_stage_status(run_id, "storyboard", "RUNNING")
-            append_event_log(run_id, "storyboard", "INFO", f"Planning pedagogical storyboard for '{topic_name}'", progress=20)
-            
-            storyboard = create_storyboard(topic_name, script_text)
-            
+            update_stage_status(run_id, "script", "COMPLETED")
+            append_event_log(run_id, "script", "INFO", "Script generation completed via LangGraph", progress=15)
+
+            # Persist storyboard artifact
+            current_stg = "storyboard"
             os.makedirs(os.path.dirname(storyboard_file), exist_ok=True)
             storyboard_json = storyboard.model_dump_json(indent=2)
             with open(storyboard_file, "w", encoding="utf-8") as f:
                 f.write(storyboard_json)
             with open(os.path.join(run_dir, "storyboard.json"), "w", encoding="utf-8") as f:
                 f.write(storyboard_json)
-            
+
             update_stage_status(run_id, "storyboard", "COMPLETED")
             append_event_log(run_id, "storyboard", "INFO", f"Storyboard planned: {len(storyboard.scenes)} scenes", progress=25)
         else:
-            # Resume: reload storyboard from persisted JSON
+            # Resume: reload persisted artifacts
+            if os.path.exists(script_file):
+                with open(script_file, "r", encoding="utf-8") as f:
+                    script_text = json.load(f).get("script", "")
+
             target_file = storyboard_file if os.path.exists(storyboard_file) else os.path.join(run_dir, "storyboard.json")
             if os.path.exists(target_file):
                 from functions.storyboard_schema import Storyboard as StoryboardSchema
@@ -113,8 +130,30 @@ async def video_main(
             elif script_text:
                 storyboard = create_storyboard(topic_name, script_text)
 
+        if storyboard is not None:
+            if not visual_plan:
+                visual_plan = [
+                    {
+                        "scene_id": scene.scene_id,
+                        "strategy": scene.visual_type,
+                        "rationale": scene.visual_rationale,
+                    }
+                    for scene in storyboard.scenes
+                ]
+            with atomic_output(visual_plan_file) as plan_temp:
+                with open(plan_temp, "w", encoding="utf-8") as stream:
+                    json.dump({"schema_version": 1, "scenes": visual_plan}, stream, indent=2)
+            if not visual_specs:
+                from functions.langgraph_pipeline import _validated_visual_specs
+                visual_specs = _validated_visual_specs(storyboard)
+            specs_file = os.path.join(run_dir, "artifacts", "visual_specs.json")
+            with atomic_output(specs_file) as specs_temp:
+                with open(specs_temp, "w", encoding="utf-8") as stream:
+                    json.dump({"schema_version": 1, "scenes": visual_specs}, stream, indent=2)
+
         # ── 3. Audio TTS & Slide Image Generation Stage ──
         if start_index <= stages_order.index("scrapling_images"):
+            current_stg = "audio_tts"
             update_stage_status(run_id, "audio_tts", "RUNNING")
             update_stage_status(run_id, "scrapling_images", "RUNNING")
             append_event_log(run_id, "audio_tts", "INFO", "Synthesizing Edge-TTS audio & generating slide images", progress=35)
@@ -125,23 +164,33 @@ async def video_main(
             update_stage_status(run_id, "scrapling_images", "COMPLETED")
             append_event_log(run_id, "scrapling_images", "INFO", "Audio synthesis and slide image generation completed", progress=50)
 
-        # ── 3. Wav2Lip Lip-Sync Animation Stage ──
-        if start_index <= min(stages_order.index("wav2lip"), stages_order.index("sadtalker")):
-            update_stage_status(run_id, "wav2lip", "RUNNING")
-            append_event_log(run_id, "wav2lip", "INFO", f"Generating Wav2Lip lip-sync animation (force_cpu={force_cpu})", progress=65)
-            
-            create_video_from_audio(run_dir, character_name, cpu_mode=force_cpu)
-            
-            update_stage_status(run_id, "wav2lip", "COMPLETED")
-            append_event_log(run_id, "wav2lip", "INFO", "Wav2Lip avatar generation completed", progress=80)
+        # ── 3. Parallel Stage: GPU Wav2Lip Animation + CPU Manim/Visual Generation ──
+        if start_index <= stages_order.index("sadtalker"):
+            current_stg = "sadtalker"
+            update_stage_status(run_id, "sadtalker", "RUNNING")
+            has_manim = any(getattr(s, "visual_type", "") == "manim" for s in (storyboard.scenes if storyboard else []))
+            mode_desc = "GPU Wav2Lip + CPU Manim animations" if has_manim else "GPU Wav2Lip + CPU slide videos"
+            append_event_log(run_id, "sadtalker", "INFO", f"Launching parallel generation: {mode_desc}", progress=65)
+
+            # Concurrently run GPU Wav2Lip and CPU Manim/slide visual rendering
+            await asyncio.gather(
+                asyncio.to_thread(create_video_from_audio, run_dir, character_name, cpu_mode=force_cpu),
+                asyncio.to_thread(run_visual_pipeline, run_dir, storyboard=storyboard)
+            )
+
+            update_stage_status(run_id, "sadtalker", "COMPLETED")
+            append_event_log(run_id, "sadtalker", "INFO", "Parallel Wav2Lip and visual scene rendering completed", progress=80)
+        elif start_index <= stages_order.index("stitching"):
+            current_stg = "stitching"
+            # If resuming directly from stitching stage, ensure visual scenes are rendered
+            run_visual_pipeline(run_dir, storyboard=storyboard)
 
         # ── 4. Video Stitching & FFmpeg Concat Stage ──
         if start_index <= stages_order.index("stitching"):
+            current_stg = "stitching"
             update_stage_status(run_id, "stitching", "RUNNING")
-            append_event_log(run_id, "stitching", "INFO", "Creating slide videos & stitching final MP4", progress=90)
-            
-            create_image_videos(run_dir)
-            
+            append_event_log(run_id, "stitching", "INFO", "Stitching final MP4 tutorial video", progress=90)
+
             override_delay_seconds = None
             if pipeline_delay_ms is not None:
                 try:
@@ -160,8 +209,7 @@ async def video_main(
 
     except Exception as e:
         error_msg = str(e)
-        current_stg = stages_order[start_index]
-        print(f"❌ Error in stage '{current_stg}' for run {run_id}: {error_msg}")
+        print(f"[ERROR] Error in stage '{current_stg}' for run {run_id}: {error_msg}")
         update_stage_status(run_id, current_stg, "FAILED", error=error_msg)
         append_event_log(run_id, current_stg, "ERROR", f"Pipeline failed in stage '{current_stg}': {error_msg}")
         release_lock(run_id)

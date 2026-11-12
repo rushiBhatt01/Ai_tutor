@@ -32,6 +32,26 @@ def sanitize_script_for_tts(script_text: str) -> str:
     return script_text
 
 
+TECHNICAL_ALGORITHM_PATTERNS = [
+    r'\bbfs\b', r'\bdfs\b', r'breadth[- ]first', r'depth[- ]first',
+    r'binary[- ]search', r'linear[- ]search', r'\bsearch(?:ing)?\b',
+    r'\bsort(?:ing)?\b', r'bubble[- ]sort', r'quick[- ]sort',
+    r'merge[- ]sort', r'insertion[- ]sort', r'selection[- ]sort',
+    r'radix[- ]sort', r'heap[- ]sort', r'linear[- ]sort',
+    r'graph[- ]traversal', r'tree[- ]traversal', r'binary[- ]tree',
+    r'dijkstra', r'a\*[- ]search', r'algorithm', r'data[- ]structure',
+    r'linked[- ]list', r'\bstack\b', r'\bqueue\b', r'heap', r'dynamic[- ]programming'
+]
+
+
+def is_technical_or_algorithmic_topic(topic_name: str) -> bool:
+    """Detect if topic is an algorithmic, data structure, or mathematical concept suitable for Manim animation."""
+    if not topic_name:
+        return False
+    lower = topic_name.lower()
+    return any(re.search(pat, lower) for pat in TECHNICAL_ALGORITHM_PATTERNS)
+
+
 def create_script(topic_name, level_of_explanation, age, creativity_level, humour_level, character_name="Tutor"):
     """
     Generates a structured, comprehensive educational video tutorial script
@@ -85,6 +105,18 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
     else:
         humour_string = "Add funny observations, witty remarks, and playful banter to make the learning experience hilarious and engaging."
 
+    technical_alignment_guidance = ""
+    if is_technical_or_algorithmic_topic(topic_name):
+        technical_alignment_guidance = (
+            f"\nTECHNICAL & MANIM VISUAL ALIGNMENT INSTRUCTION:\n"
+            f"Because '{topic_name}' is a technical algorithm or data structure topic, an animated vector visualization "
+            f"(e.g. graph traversal, tree, or array step execution) will run on-screen in synchrony with your words.\n"
+            f"In Section 2 (CORE EXPLANATION) or Section 3 (WALKTHROUGH):\n"
+            f"- You MUST provide a structured step-by-step walkthrough using concrete labeled elements (e.g. nodes A, B, C, D, E or array items).\n"
+            f"- State the sequence of steps explicitly in order (for example: 'We start by visiting node A. Next, we examine its neighbors B and C. Then, we continue to nodes D and E in level order.').\n"
+            f"- The spoken words MUST match the exact order of elements visited so the animated visual highlights each element in sync with the audio.\n"
+        )
+
     # Concise prompt targeting 60-90 seconds of narration (150-225 words)
     system_prompt = (
         f"You are {character_name}, an expert educator and captivating video tutorial narrator.\n"
@@ -106,7 +138,8 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
         f"- {level_string}\n"
         f"- {creativity_string}\n"
         f"- {humour_string}\n"
-        f"- Speak in first-person as {character_name} with an enthusiastic, encouraging, and clear voice.\n\n"
+        f"- Speak in first-person as {character_name} with an enthusiastic, encouraging, and clear voice.\n"
+        f"{technical_alignment_guidance}\n"
         f"CRITICAL FORMATTING RULES FOR TEXT-TO-SPEECH & WAV2LIP:\n"
         f"1. Output ONLY plain, raw spoken prose narration meant to be read aloud by Text-to-Speech.\n"
         f"2. NEVER use markdown symbols: NO asterisks, hashtags, underscores, backticks, or bullet points.\n"
@@ -116,19 +149,22 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
         f"6. Remember: MAXIMUM 225 words. Count carefully.\n"
     )
 
-    # 1. Primary path: Cerebras (lowest cost Llama 3.1 8B)
+    # 1. Primary path: Cerebras (lowest cost Llama 3.1 8B / gpt-oss-120b)
     cerebras_key = resolve_cerebras_api_key()
     if cerebras_key:
         try:
-            print(f"🚀 Generating script using Cerebras ({CEREBRAS_DEFAULT_MODEL} - lowest credit consumption)...")
+            print(f"[Cerebras] Generating script using {CEREBRAS_DEFAULT_MODEL}...")
             script_text = generate_cerebras_completion(
                 prompt=user_prompt,
                 system_prompt=system_prompt,
                 model=CEREBRAS_DEFAULT_MODEL,
                 temperature=0.3,
-                max_tokens=450,
+                max_tokens=4000,
                 api_key=cerebras_key,
             )
+            if not script_text or not script_text.strip():
+                raise ValueError("Cerebras returned empty content (reasoning token budget exhausted)")
+
             sanitized_script = sanitize_script_for_tts(script_text)
             words = sanitized_script.split()
             if len(words) > 240:
@@ -136,9 +172,12 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
                 last_period = sanitized_script.rfind(".")
                 if last_period > len(sanitized_script) * 0.6:
                     sanitized_script = sanitized_script[:last_period + 1]
-            return sanitized_script
+            if len(sanitized_script.strip()) > 20:
+                return sanitized_script
+            else:
+                raise ValueError("Sanitized script too short")
         except Exception as cerebras_err:
-            print(f"⚠️ Cerebras generation error: {cerebras_err}. Trying Gemini fallback if available...")
+            print(f"[Cerebras Warning] Generation error: {cerebras_err}. Trying Gemini fallback if available...")
 
     # 2. Fallback path: Gemini
     gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")

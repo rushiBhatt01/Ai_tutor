@@ -13,28 +13,9 @@ async def upload_file(path: str, filename: Optional[str] = None, metadata: Optio
             file_id = await bucket.upload_from_stream(fname, f, metadata=meta)
         return file_id
     except Exception as e:
-        print(f"⚠️ Mongo DB upload_file failed: {e}")
+        print("MongoDB file upload unavailable")
         return None
 
-
-async def upload_bytes(data: bytes, filename: str, metadata: Optional[Dict] = None) -> Optional[ObjectId]:
-    try:
-        bucket = get_bucket()
-        meta = metadata or {}
-        file_id = await bucket.upload_from_stream(filename, data, metadata=meta)
-        return file_id
-    except Exception as e:
-        print(f"⚠️ Mongo DB upload_bytes failed: {e}")
-        return None
-
-
-async def list_files_by_meta(query: Dict):
-    try:
-        db = get_db()
-        return db.fs.files.find(query)
-    except Exception as e:
-        print(f"⚠️ Mongo DB list_files_by_meta failed: {e}")
-        return []
 
 
 async def open_download_stream(file_id: ObjectId):

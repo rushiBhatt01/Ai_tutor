@@ -4,9 +4,10 @@ import PipelineProgress from "./PipelineProgress";
 
 const SUGGESTIONS = [
   "Explain OAuth 2.0",
-  "How does DNS work?",
+  "BFS",
+  "binary search",
+  "linear regression",
   "Intro to Machine Learning",
-  "What is Blockchain?",
 ];
 
 export default function Box1(props) {

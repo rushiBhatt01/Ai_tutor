@@ -55,10 +55,15 @@ def _resolve_gemini_api_key() -> Optional[str]:
 # Deterministic Fallback Chunker
 # ---------------------------------------------------------------------------
 
+from functions.create_script_function import is_technical_or_algorithmic_topic
+
+
 def generate_fallback_storyboard(topic_name: str, script: str) -> Storyboard:
     """
     Deterministically partition script into 3–5 scenes using sentence boundaries.
     Guarantees a valid Storyboard instance even if LLM is completely unavailable.
+    For technical topics, assigns visual_type='manim' and a structured manim_spec
+    to the core walkthrough scene for dynamic animation.
     """
     sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', script.strip()) if s.strip()]
     if not sentences:
@@ -67,6 +72,9 @@ def generate_fallback_storyboard(topic_name: str, script: str) -> Storyboard:
     # Target 3–5 scenes
     target_scenes = max(3, min(5, len(sentences)))
     chunk_size = max(1, len(sentences) // target_scenes)
+
+    is_tech = is_technical_or_algorithmic_topic(topic_name)
+    manim_scene_idx = 1 if (is_tech and target_scenes > 2) else (0 if is_tech else -1)
 
     scenes = []
     for idx in range(target_scenes):
@@ -89,6 +97,27 @@ def generate_fallback_storyboard(topic_name: str, script: str) -> Storyboard:
         word_count = len(narration.split())
         estimated_secs = max(3, min(90, int(word_count / 2.5)))
 
+        visual_type = "slide"
+        manim_spec = None
+
+        if idx == manim_scene_idx:
+            visual_type = "manim"
+            lower_topic = topic_name.lower()
+            topic_type = "bfs" if ("bfs" in lower_topic or "breadth" in lower_topic) else (
+                "dfs" if ("dfs" in lower_topic or "depth" in lower_topic) else (
+                    "binary_search" if "binary" in lower_topic and "search" in lower_topic else (
+                        "sorting" if "sort" in lower_topic else "graph_traversal"
+                    )
+                )
+            )
+            manim_spec = {
+                "topic_type": topic_type,
+                "scene_title": f"{title[:40]} Animation",
+                "steps": ["A", "B", "C", "D", "E"],
+                "nodes": ["A", "B", "C", "D", "E"],
+                "edges": [["A", "B"], ["A", "C"], ["B", "D"], ["B", "E"]],
+            }
+
         scenes.append(Scene(
             scene_id=idx,
             key_concept=title[:160],
@@ -96,6 +125,8 @@ def generate_fallback_storyboard(topic_name: str, script: str) -> Storyboard:
             visual_query=f"{topic_name} {title[:60]} educational diagram"[:180],
             on_screen_text=title[:120],
             estimated_seconds=estimated_secs,
+            visual_type=visual_type,
+            manim_spec=manim_spec,
         ))
 
     return Storyboard(title=topic_name[:120], scenes=scenes)
@@ -114,6 +145,11 @@ RULES:
 - Each scene's narration must be self-contained, speakable prose (no markdown).
 - visual_query must describe a concrete educational image or diagram, not an abstract phrase.
 - estimated_seconds should reflect spoken word count (~2.5 words/second).
+- For algorithmic or technical topics (e.g., BFS, DFS, search, sorting, graph traversal, trees):
+  Mark the scene demonstrating the algorithm with "visual_type": "manim", and provide a "manim_spec"
+  with fields "topic_type" ("bfs", "dfs", "binary_search", "sorting", or "graph_traversal"),
+  "scene_title", and "steps" (list of elements visited, e.g. ["A", "B", "C", "D", "E"]).
+  For non-algorithmic scenes, use "visual_type": "slide" and "manim_spec": null.
 
 OUTPUT FORMAT (strict JSON object):
 {{
@@ -125,7 +161,9 @@ OUTPUT FORMAT (strict JSON object):
       "narration": "...",
       "visual_query": "...",
       "on_screen_text": "...",
-      "estimated_seconds": 20
+      "estimated_seconds": 20,
+      "visual_type": "slide",
+      "manim_spec": null
     }}
   ]
 }}
@@ -165,30 +203,30 @@ def create_storyboard(topic_name: str, script: str) -> Storyboard:
     cerebras_key = resolve_cerebras_api_key()
     if cerebras_key:
         try:
-            print(f"🎬 Generating storyboard with Cerebras ({CEREBRAS_DEFAULT_MODEL})...")
+            print(f"[Cerebras] Generating storyboard with {CEREBRAS_DEFAULT_MODEL}...")
             raw_json = generate_cerebras_completion(
                 prompt=prompt,
                 system_prompt="You are an expert storyboard planner that outputs valid JSON matching the exact schema.",
                 model=CEREBRAS_DEFAULT_MODEL,
                 temperature=0.2,
-                max_tokens=2000,
+                max_tokens=3500,
                 json_mode=True,
                 api_key=cerebras_key,
             )
             if raw_json:
                 try:
                     storyboard = _parse_and_validate(raw_json)
-                    print(f"✅ Storyboard generated: {len(storyboard.scenes)} scenes for '{topic_name}' via Cerebras")
+                    print(f"[Cerebras OK] Storyboard generated: {len(storyboard.scenes)} scenes for '{topic_name}' via Cerebras")
                     return storyboard
                 except (ValidationError, ValueError, json.JSONDecodeError) as first_error:
-                    print(f"⚠️ Cerebras attempt 1 validation failed: {first_error}. Attempting 1-shot repair...")
+                    print(f"[Cerebras Warning] Attempt 1 validation failed: {first_error}. Attempting 1-shot repair...")
                     repair_prompt = f"{prompt}\n\n" + _REPAIR_PROMPT_TEMPLATE.format(error=str(first_error))
                     repair_json = generate_cerebras_completion(
                         prompt=repair_prompt,
                         system_prompt="You are an expert storyboard planner that outputs valid JSON matching the exact schema.",
                         model=CEREBRAS_DEFAULT_MODEL,
                         temperature=0.1,
-                        max_tokens=2000,
+                        max_tokens=3500,
                         json_mode=True,
                         api_key=cerebras_key,
                     )

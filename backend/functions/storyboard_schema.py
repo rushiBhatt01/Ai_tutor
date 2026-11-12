@@ -9,7 +9,7 @@ before it enters the audio/video pipeline.
 """
 
 from pydantic import BaseModel, Field, model_validator
-from typing import List
+from typing import List, Optional, Dict, Any
 
 
 class Scene(BaseModel):
@@ -42,6 +42,14 @@ class Scene(BaseModel):
         ge=3,
         le=90,
         description="Estimated spoken duration in seconds."
+    )
+    visual_type: str = Field(
+        default="slide",
+        description="Visual presentation type: 'slide' (canvas/image slide) or 'manim' (CPU-rendered mathematical/algorithmic animation)."
+    )
+    manim_spec: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Animation parameters for Manim scene generation (algorithm type, scene title, steps, graph/nodes/edges)."
     )
 
 

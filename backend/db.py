@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlsplit
 from motor.motor_asyncio import AsyncIOMotorClient
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 
@@ -12,7 +13,7 @@ def get_db():
     if _db is None:
         uri = os.getenv("MONGO_URI", "mongodb://localhost:27017/video_tutorials")
         _client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=2000)
-        db_name = uri.rsplit("/", 1)[-1]
+        db_name = urlsplit(uri).path.strip("/") or os.getenv("MONGO_DATABASE", "video_tutorials")
         _db = _client[db_name]
     return _db
 
@@ -24,15 +25,6 @@ def get_bucket():
     return _bucket
 
 
-async def get_cached_video(topic: str):
-    try:
-        db = get_db()
-        doc = await db.video_cache.find_one({"topic": topic})
-        return doc["file_id"] if doc else None
-    except Exception as e:
-        print(f"⚠️ Mongo DB cache lookup failed (MongoDB service unavailable): {e}")
-        return None
-
 
 async def set_cached_video(topic: str, file_id):
     try:
@@ -43,5 +35,5 @@ async def set_cached_video(topic: str, file_id):
             upsert=True,
         )
     except Exception as e:
-        print(f"⚠️ Mongo DB cache write failed (MongoDB service unavailable): {e}")
+        print("MongoDB cache write unavailable")
 

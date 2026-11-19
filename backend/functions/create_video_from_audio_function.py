@@ -132,6 +132,7 @@ def create_video_from_audio(timestamp: str, character_name: str, cpu_mode: bool 
         "--face", img_path,
         "--audio_dir", audio_folder,
         "--outdir", video_output_dir,
+        "--static", "True",
         "--nosmooth"
     ]
 

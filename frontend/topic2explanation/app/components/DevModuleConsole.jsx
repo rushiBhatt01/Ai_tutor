@@ -42,6 +42,16 @@ export default function DevModuleConsole() {
     }
   };
 
+  const testButton = (modulePath, payload, busyLabel, label) => (
+    <button
+      onClick={() => runModuleTest(modulePath, payload)}
+      disabled={loading}
+      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-sm transition"
+    >
+      {loading ? busyLabel : label}
+    </button>
+  );
+
   return (
     <div className="p-6 max-w-5xl mx-auto bg-slate-900 text-white rounded-xl shadow-2xl space-y-6">
       <div className="flex items-center justify-between border-b border-slate-700 pb-4">
@@ -87,13 +97,7 @@ export default function DevModuleConsole() {
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"
               />
             </div>
-            <button
-              onClick={() => runModuleTest("script", scriptInput)}
-              disabled={loading}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-sm transition"
-            >
-              {loading ? "Running LLM..." : "▶ Test Script Module"}
-            </button>
+            {testButton("script", scriptInput, "Running LLM...", "▶ Test Script Module")}
           </div>
         )}
 
@@ -109,13 +113,7 @@ export default function DevModuleConsole() {
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"
               />
             </div>
-            <button
-              onClick={() => runModuleTest("speech", speechInput)}
-              disabled={loading}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-sm transition"
-            >
-              {loading ? "Synthesizing Speech..." : "▶ Test Speech Module"}
-            </button>
+            {testButton("speech", speechInput, "Synthesizing Speech...", "▶ Test Speech Module")}
           </div>
         )}
 
@@ -131,13 +129,7 @@ export default function DevModuleConsole() {
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white"
               />
             </div>
-            <button
-              onClick={() => runModuleTest("scrapling", scrapingInput)}
-              disabled={loading}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-sm transition"
-            >
-              {loading ? "Scrapling Scraping..." : "▶ Test Scrapling Module"}
-            </button>
+            {testButton("scrapling", scrapingInput, "Scrapling Scraping...", "▶ Test Scrapling Module")}
           </div>
         )}
 
@@ -155,13 +147,7 @@ export default function DevModuleConsole() {
                 Force PyTorch CPU Mode
               </label>
             </div>
-            <button
-              onClick={() => runModuleTest("wav2lip", sadtalkerInput)}
-              disabled={loading}
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-sm transition"
-            >
-              {loading ? "Rendering Lip Sync..." : "▶ Test Wav2Lip Module"}
-            </button>
+            {testButton("wav2lip", sadtalkerInput, "Rendering Lip Sync...", "▶ Test Wav2Lip Module")}
           </div>
         )}
       </div>

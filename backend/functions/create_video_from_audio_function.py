@@ -13,34 +13,36 @@ if sys.stdout.encoding.lower() != 'utf-8':
 MAX_WORKERS = 1
 executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
+def _resolve_character_image(character_name: str) -> str:
+    filenames = [f"{character_name}{ext}" for ext in (".png", ".jpg", ".jpeg")]
+    filenames += ["face.png", "Sophia.png", "Benjamin.png"]
+    for filename in filenames:
+        for base in ("characters", os.path.join("backend", "characters")):
+            candidate = os.path.join(base, filename)
+            if os.path.exists(candidate):
+                return candidate
+    return os.path.join("characters", "face.png")
+
+def _resolve_paths():
+    python_exe = sys.executable
+    checkpoint_path = os.path.join("Wav2Lip", "checkpoints", "wav2lip_gan.pth")
+    if not os.path.exists(checkpoint_path):
+        checkpoint_path = os.path.join("backend", "Wav2Lip", "checkpoints", "wav2lip_gan.pth")
+    if not os.path.exists(checkpoint_path):
+        checkpoint_path = os.path.join("Wav2Lip", "checkpoints", "wav2lip.pth")
+    if not os.path.exists(checkpoint_path):
+        checkpoint_path = os.path.join("backend", "Wav2Lip", "checkpoints", "wav2lip.pth")
+
+    wav2lip_script = os.path.join("Wav2Lip", "inference.py")
+    if not os.path.exists(wav2lip_script):
+        wav2lip_script = os.path.join("backend", "Wav2Lip", "inference.py")
+    return python_exe, checkpoint_path, wav2lip_script
+
 def process_single_audio(audio_file: str, timestamp: str, character_name: str, cpu_mode: bool = False) -> str:
     cpu_mode = cpu_mode or os.getenv("CPU_ONLY", "false").lower() == "true"
     audio_path = os.path.join(timestamp, "audio", audio_file)
     
-    # Support png, jpg, jpeg extensions for character image
-    img_path = None
-    for ext in [".png", ".jpg", ".jpeg"]:
-        for base in ["characters", os.path.join("backend", "characters")]:
-            candidate = os.path.join(base, f"{character_name}{ext}")
-            if os.path.exists(candidate):
-                img_path = candidate
-                break
-        if img_path:
-            break
-            
-    if not img_path:
-        # Fallback to face.png / Sophia.png / Benjamin.png if character image not found
-        for fallback in ["face.png", "Sophia.png", "Benjamin.png"]:
-            for base in ["characters", os.path.join("backend", "characters")]:
-                candidate = os.path.join(base, fallback)
-                if os.path.exists(candidate):
-                    img_path = candidate
-                    break
-            if img_path:
-                break
-
-    if not img_path:
-        img_path = os.path.join("characters", "face.png")
+    img_path = _resolve_character_image(character_name)
 
     video_output_dir = os.path.join(timestamp, "video")
     os.makedirs(video_output_dir, exist_ok=True)
@@ -64,18 +66,7 @@ def process_single_audio(audio_file: str, timestamp: str, character_name: str, c
         return f"[Static presenter; Wav2Lip disabled pending CPU benchmark] {audio_file}"
 
     # Command using Wav2Lip inference
-    python_exe = sys.executable
-    checkpoint_path = os.path.join("Wav2Lip", "checkpoints", "wav2lip_gan.pth")
-    if not os.path.exists(checkpoint_path):
-        checkpoint_path = os.path.join("backend", "Wav2Lip", "checkpoints", "wav2lip_gan.pth")
-    if not os.path.exists(checkpoint_path):
-        checkpoint_path = os.path.join("Wav2Lip", "checkpoints", "wav2lip.pth")
-    if not os.path.exists(checkpoint_path):
-        checkpoint_path = os.path.join("backend", "Wav2Lip", "checkpoints", "wav2lip.pth")
-
-    wav2lip_script = os.path.join("Wav2Lip", "inference.py")
-    if not os.path.exists(wav2lip_script):
-        wav2lip_script = os.path.join("backend", "Wav2Lip", "inference.py")
+    python_exe, checkpoint_path, wav2lip_script = _resolve_paths()
 
     command = [
         python_exe,
@@ -94,10 +85,7 @@ def process_single_audio(audio_file: str, timestamp: str, character_name: str, c
         # nvidia-smi reports GTX 1650 as CUDA device 0 (Windows Task Manager
         # shows it as "GPU 1", but CUDA uses its own indexing).
         env = os.environ.copy()
-        if not cpu_mode:
-            env["CUDA_VISIBLE_DEVICES"] = "0"
-        else:
-            env["CUDA_VISIBLE_DEVICES"] = ""  # Force CPU mode by hiding all GPUs
+        env["CUDA_VISIBLE_DEVICES"] = "" if cpu_mode else "0"
 
         res = subprocess.run(command, check=True, timeout=600, capture_output=True, text=True, env=env)
         if res.stdout:
@@ -118,21 +106,50 @@ def process_single_audio(audio_file: str, timestamp: str, character_name: str, c
 def create_video_from_audio(timestamp: str, character_name: str, cpu_mode: bool = False):
     audio_folder = os.path.join(timestamp, "audio")
     audio_files = [f for f in os.listdir(audio_folder) if f.endswith(('.wav', '.mp3'))]
+    if not audio_files:
+        return []
 
-    futures = []
-    for audio_file in audio_files:
-        futures.append(
-            executor.submit(process_single_audio, audio_file, timestamp, character_name, cpu_mode)
-        )
+    # If explicit static avatar mode is set, use the single-audio ffmpeg generator
+    if os.getenv("AVATAR_MODE", "wav2lip") == "static":
+        futures = [executor.submit(process_single_audio, f, timestamp, character_name, cpu_mode) for f in audio_files]
+        results = [future.result() for future in as_completed(futures)]
+        print(f"All jobs done. Videos saved in {timestamp}/video")
+        return results
 
+    video_output_dir = os.path.join(timestamp, "video")
+    os.makedirs(video_output_dir, exist_ok=True)
+    img_path = _resolve_character_image(character_name)
+    python_exe, checkpoint_path, wav2lip_script = _resolve_paths()
+
+    cpu_mode = cpu_mode or os.getenv("CPU_ONLY", "false").lower() == "true"
+    env = os.environ.copy()
+    env["CUDA_VISIBLE_DEVICES"] = "" if cpu_mode else "0"
+
+    command = [
+        python_exe,
+        wav2lip_script,
+        "--checkpoint_path", checkpoint_path,
+        "--face", img_path,
+        "--audio_dir", audio_folder,
+        "--outdir", video_output_dir,
+        "--nosmooth"
+    ]
+
+    print(f"[Wav2Lip] Starting batch lip sync for {len(audio_files)} files using {img_path} (cpu_mode={cpu_mode})...")
+    try:
+        subprocess.run(command, check=True, timeout=1200, env=env)
+    except subprocess.CalledProcessError as e:
+        print(f"[Wav2Lip WARNING] Batch execution returned error ({e}); falling back to per-file processing...")
+        futures = [executor.submit(process_single_audio, f, timestamp, character_name, cpu_mode) for f in audio_files]
+        return [future.result() for future in as_completed(futures)]
 
     results = []
-    for future in as_completed(futures):
-        try:
-            results.append(future.result())
-        except Exception as e:
-            print(f"[Wav2Lip ERROR] Video generation failed: {e}")
-            raise RuntimeError(f"Video generation failed: {e}")
+    for audio_file in audio_files:
+        stem = os.path.splitext(audio_file)[0]
+        final_output_file = os.path.join(video_output_dir, f"{stem}.mp4")
+        if not os.path.exists(final_output_file):
+            raise FileNotFoundError(f"No video generated at {final_output_file} for {audio_file}")
+        results.append(f"[Wav2Lip OK] {audio_file} -> {final_output_file}")
 
     print(f"All jobs done. Videos saved in {timestamp}/video")
     return results

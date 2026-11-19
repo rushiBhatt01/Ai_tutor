@@ -137,12 +137,26 @@ docs/
 docs/*
 backend/tests
 backend/tests/*
-manim-test-module
-manim-test-module/*
-!manim-test-module/tests/
-!manim-test-module/tests/*
 docs/backend-code-organization-review.md
 backend/TODO.md
+
+# Oracle Cloud & OCI deployment docs
+Oracle_Cloud_*.md
+*Oracle_Cloud*
+*OCI_ELIGIBILITY*
+deployment/OCI_ELIGIBILITY.md
+deployment/*oci*
+deployment/*oracle*
+
+# Unconfirmed & Deprecated Docs & Scratch Modules
+Manim_Implementation_Test_Module*
+manim-test-module/
+manim-test-module/*
+docs/debug_pages/test_clip*.py
+
+# Agent tooling & local skills
+.agents/
+skills-lock.json
 
 # Wav2Lip local env & temp inputs
 backend/Wav2Lip/wav2lip_env/

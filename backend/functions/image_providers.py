@@ -70,7 +70,7 @@ class HttpProvider:
     def __init__(self, config: dict, session=None):
         self.config = config
         self.session = session or requests.Session()
-        self.session.headers.setdefault("User-Agent", "VideoTutorialGenerator/1.0 (educational visual asset retrieval)")
+        self.session.headers["User-Agent"] = "AITutorVideoGenerator/2.0 (mailto:admin@aitutor.org; educational research)"
         self.last_request = 0.0
         self.cooldown_until = 0.0
 
@@ -119,9 +119,14 @@ class WikimediaCommonsProvider(HttpProvider):
     endpoint = "https://commons.wikimedia.org/w/api.php"
 
     def search(self, query, limit):
+        stop_words = {"a", "an", "and", "are", "as", "at", "by", "for", "from", "in",
+                      "is", "it", "of", "on", "or", "that", "the", "this", "to", "with",
+                      "illustration", "diagram", "showing"}
+        words = [w for w in re.findall(r"[\w'-]+", str(query)) if w.casefold() not in stop_words]
+        clean_query = " ".join(words[:5]) if words else str(query)
         response = self.get(self.config.get("endpoint", self.endpoint), params={
             "action": "query", "format": "json", "generator": "search",
-            "gsrsearch": f"filetype:bitmap {query}", "gsrnamespace": 6,
+            "gsrsearch": f"filetype:bitmap {clean_query}", "gsrnamespace": 6,
             "gsrlimit": min(limit, 20), "prop": "imageinfo",
             "iiprop": "url|size|extmetadata", "iiurlwidth": 1280,
         })
@@ -366,9 +371,13 @@ class ImageSearchService:
 
     @staticmethod
     def build_query(narration, visual_goal):
-        text = re.sub(r"\s+", " ", f"{visual_goal}. {narration}").strip()
+        if visual_goal and str(visual_goal).strip():
+            words = re.findall(r"[\w'-]+", str(visual_goal).strip())
+            if words:
+                return " ".join(words[:12])
+        text = re.sub(r"\s+", " ", str(narration or "")).strip()
         words = re.findall(r"[\w'-]+", text)
-        return " ".join(words[:32])
+        return " ".join(words[:12])
 
     @staticmethod
     def refine_query(narration, visual_goal, must_show=None):

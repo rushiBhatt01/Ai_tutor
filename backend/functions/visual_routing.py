@@ -38,6 +38,12 @@ MOTION_ANIMATION_CUES = re.compile(
     r"teleoperation|assembly|manufacturing|swarming)\b",
     re.IGNORECASE,
 )
+TECHNICAL_DIAGRAM_CUES = re.compile(
+    r"\b(?:architecture|pipeline|diagram|knowledge graph|graph|database|"
+    r"schema|triples?|rdf|sparql|system design|data model|api|network|protocol|"
+    r"cloud|framework|microservices?|ontology|entity)\b",
+    re.IGNORECASE,
+)
 KNOWN_REQUESTS = {"slide", "pillow", "manim", "web_image", "hybrid_image", "hybrid_gif"}
 
 
@@ -72,6 +78,7 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
     has_algorithm_intent = bool(ALGORITHM_CUES.search(lesson_text))
     has_real_world_subject = bool(REAL_WORLD_CUES.search(lesson_text))
     has_physical_tech = bool(PHYSICAL_TECH_CUES.search(lesson_text))
+    has_technical_diagram = bool(TECHNICAL_DIAGRAM_CUES.search(lesson_text))
     has_motion_cues = bool(MOTION_ANIMATION_CUES.search(lesson_text))
     manim_available = capabilities.get("manim", _enabled("MANIM_ENABLED"))
     web_images_available = capabilities.get("web_image", _enabled("IMAGE_SEARCH_ENABLED"))
@@ -84,6 +91,8 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
         if not isinstance(spec, dict) or not topic_type:
             return VisualRoute("pillow", "Algorithm animation has no valid specification; using Pillow.")
         if topic_type not in SUPPORTED_ANIMATIONS:
+            if web_images_available:
+                return VisualRoute("hybrid_image", f"Unsupported animation '{topic_type}'; using a hybrid slide with architectural diagram.")
             return VisualRoute("pillow", f"Unsupported animation '{topic_type}'; using Pillow.")
         if not manim_available:
             return VisualRoute("pillow", "Manim is disabled; using Pillow.")
@@ -102,7 +111,11 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
         return VisualRoute("pillow", "Web image retrieval is disabled; using Pillow.")
     if requested == "manim":
         if topic_type and topic_type not in SUPPORTED_ANIMATIONS:
+            if web_images_available:
+                return VisualRoute("hybrid_image", f"Unsupported animation '{topic_type}'; using a hybrid slide with architectural diagram.")
             return VisualRoute("pillow", f"Unsupported animation '{topic_type}'; using Pillow.")
+        if web_images_available:
+            return VisualRoute("hybrid_image", "The scene is explanatory rather than algorithmic; using a hybrid slide with architectural diagram.")
         return VisualRoute("pillow", "The scene is explanatory rather than algorithmic; animation is not needed.")
     if requested == "web_image" and not has_real_world_subject:
         return VisualRoute("pillow", "No clear real-world image subject was identified; using Pillow.")
@@ -120,6 +133,8 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
         return VisualRoute("hybrid_gif", "Physical technology scene with motion cues benefits from an animated GIF overlay.")
     if has_physical_tech and web_images_available:
         return VisualRoute("hybrid_image", "Physical technology scene benefits from a contextual photo overlay on the slide.")
+    if has_technical_diagram and web_images_available:
+        return VisualRoute("hybrid_image", "Technical architecture scene benefits from a relevant diagram on the slide.")
 
     return VisualRoute("pillow", "A readable Pillow slide is the best fit for this scene.")
 

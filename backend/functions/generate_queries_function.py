@@ -57,7 +57,7 @@ def generate_storyboard_slide_specs(
         "Write for scanning: each title is at most 6 words. Use short, informative phrases, not narration sentences.\n"
         "For INTRO_OVERVIEW, KEY_CONCEPTS, and SUMMARY_CONCLUSION slides, provide 3 or 4 informative bullets, each at most 10 words.\n"
         "For other slides, provide 2 or 3 bullets, each at most 8 words.\n"
-        "Choose layout_type from flowchart, cycle, or concept_map. Use flowchart for ordered steps, cycle for a repeating loop, "
+        "Choose layout_type from flowchart, cycle, concept_map, or semantic_triple. Use semantic_triple for entity relationships or subject-predicate-object triples, flowchart for ordered steps, cycle for a repeating loop, "
         "and concept_map for related ideas. Do not use flowcharts on every slide; reserve them for real sequences.\n"
         "ARCHITECTURE_STRUCTURE slides must use flowchart.\n"
         "Give 3 or 4 diagram_nodes in meaningful order. Each node is a concrete label of at most 4 words. "
@@ -88,7 +88,7 @@ def generate_storyboard_slide_specs(
                 return " ".join(str(value or "").replace("\n", " ").split()[:words]).strip()
 
             layout = item.get("layout_type", "concept_map")
-            if layout not in {"flowchart", "cycle", "concept_map"}:
+            if layout not in {"flowchart", "cycle", "concept_map", "semantic_triple", "triple"}:
                 layout = "concept_map"
             category = category_by_id[scene_id]
             if category == "ARCHITECTURE_STRUCTURE":
@@ -177,7 +177,7 @@ def generate_storyboard_slide_specs(
         fallback_specs[scene.scene_id] = {
             "title": " ".join(concept_words[:6]) or f"{topic_name} key idea",
             "bullets": bullets,
-            "layout_type": "flowchart" if category == "ARCHITECTURE_STRUCTURE" else "concept_map",
+            "layout_type": "semantic_triple" if any(k in f"{scene.narration} {scene.key_concept}".lower() for k in ("triple", "rdf", "sparql", "knowledge graph", "predicate")) else ("flowchart" if category == "ARCHITECTURE_STRUCTURE" else "concept_map"),
             "category": category,
             "diagram_nodes": nodes[:4],
             "content_source": "deterministic_fallback",

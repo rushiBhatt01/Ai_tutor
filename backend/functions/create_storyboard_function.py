@@ -79,7 +79,10 @@ def generate_fallback_storyboard(topic_name: str, script: str) -> Storyboard:
         "bfs" if "bfs" in lower_topic or "breadth-first" in lower_topic or "breadth first" in lower_topic else
         "dfs" if "dfs" in lower_topic or "depth-first" in lower_topic or "depth first" in lower_topic else
         "binary_search" if "binary" in lower_topic and "search" in lower_topic else
-        "linear_search" if "linear" in lower_topic and "search" in lower_topic else None
+        "linear_search" if "linear" in lower_topic and "search" in lower_topic else
+        "merge_sort" if "merge" in lower_topic and "sort" in lower_topic else
+        "bubble_sort" if "bubble" in lower_topic and "sort" in lower_topic else
+        "bubble_sort" if "sort" in lower_topic else None
     )
     manim_scene_idx = 1 if (algorithm_type and target_scenes > 2) else (0 if algorithm_type else -1)
 
@@ -118,7 +121,8 @@ def generate_fallback_storyboard(topic_name: str, script: str) -> Storyboard:
                     "edges": [["A", "B"], ["A", "C"], ["B", "D"], ["B", "E"]],
                     "start": "A",
                 } if algorithm_type in {"bfs", "dfs"} else {
-                    "values": [2, 4, 6, 8, 10, 12, 14], "target": 12,
+                    "values": [6, 2, 8, 4, 3, 7] if algorithm_type == "merge_sort" else ([6, 2, 8, 4, 1] if algorithm_type in {"bubble_sort", "sort", "sorting"} else [2, 4, 6, 8, 10, 12, 14]),
+                    **({"target": 12} if algorithm_type in {"binary_search", "linear_search"} else {})
                 }),
             }
 
@@ -151,10 +155,10 @@ RULES:
 - Include a concise "learning_objective" for what the learner should understand from each scene.
 - visual_query must describe a concrete educational image or diagram, not an abstract phrase.
 - estimated_seconds should reflect spoken word count (~2.5 words/second).
-- Use "visual_type": "manim" only for a scene that explains BFS, DFS, binary search, or linear search.
-  Provide a "manim_spec" with the matching "topic_type" ("bfs", "dfs", "binary_search", or
-  "linear_search") and the required input data: graph algorithms need "nodes", "edges", and "start";
-  search algorithms need "values" and "target". A technical topic by itself is not
+- Use "visual_type": "manim" only for a scene that explains BFS, DFS, binary search, linear search, merge sort, or bubble sort.
+  Provide a "manim_spec" with the matching "topic_type" ("bfs", "dfs", "binary_search", "linear_search", "merge_sort", or
+  "bubble_sort") and the required input data: graph algorithms need "nodes", "edges", and "start";
+  search algorithms need "values" and "target"; sorting algorithms need "values". A technical topic by itself is not
   a reason to animate. Use "visual_type": "slide" and "manim_spec": null for other scenes.
 
 OUTPUT FORMAT (strict JSON object):

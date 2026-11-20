@@ -8,11 +8,12 @@ from typing import Literal
 
 VisualStrategy = Literal["manim", "web_image", "pillow", "hybrid_image", "hybrid_gif"]
 
-SUPPORTED_ANIMATIONS = {"bfs", "dfs", "binary_search", "linear_search"}
+SUPPORTED_ANIMATIONS = {"bfs", "dfs", "binary_search", "linear_search", "bubble_sort", "merge_sort", "sorting", "sort"}
 ALGORITHM_CUES = re.compile(
     r"\b(?:bfs|breadth[ -]first(?: search)?|dfs|depth[ -]first(?: search)?|"
     r"binary search|linear search|breadth[ -]first traversal|depth[ -]first traversal|"
-    r"sorting algorithms?|sorting|graph traversal|tree traversal)\b",
+    r"merge[ -]sort|bubble[ -]sort|quick[ -]sort|insertion[ -]sort|sorting algorithms?|sorting|sort|"
+    r"graph traversal|tree traversal)\b",
     re.IGNORECASE,
 )
 REAL_WORLD_CUES = re.compile(
@@ -82,7 +83,6 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
     has_motion_cues = bool(MOTION_ANIMATION_CUES.search(lesson_text))
     manim_available = capabilities.get("manim", _enabled("MANIM_ENABLED"))
     web_images_available = capabilities.get("web_image", _enabled("IMAGE_SEARCH_ENABLED"))
-    giphy_available = capabilities.get("giphy", _enabled("GIPHY_ENABLED", default=bool(os.environ.get("giphy", ""))))
 
     if requested not in KNOWN_REQUESTS:
         return VisualRoute("pillow", f"Unrecognized requested strategy '{requested}'; using Pillow.")
@@ -122,17 +122,12 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
 
     # ── Hybrid visual routing for physical/tech topics ──
     if requested in {"hybrid_gif", "hybrid_image"}:
-        # Respect explicit hybrid requests from the storyboard LLM
-        if requested == "hybrid_gif" and giphy_available:
-            return VisualRoute("hybrid_gif", "Storyboard requested animated hybrid visual for this tech scene.")
         if web_images_available:
             return VisualRoute("hybrid_image", "Storyboard requested hybrid image visual for this tech scene.")
         return VisualRoute("pillow", "Hybrid visual requested but image retrieval is disabled; using Pillow.")
 
-    if has_physical_tech and has_motion_cues and giphy_available:
-        return VisualRoute("hybrid_gif", "Physical technology scene with motion cues benefits from an animated GIF overlay.")
-    if has_physical_tech and web_images_available:
-        return VisualRoute("hybrid_image", "Physical technology scene benefits from a contextual photo overlay on the slide.")
+    if (has_physical_tech or has_motion_cues) and web_images_available:
+        return VisualRoute("hybrid_image", "Physical technology scene benefits from a contextual diagram or photo overlay on the slide.")
     if has_technical_diagram and web_images_available:
         return VisualRoute("hybrid_image", "Technical architecture scene benefits from a relevant diagram on the slide.")
 

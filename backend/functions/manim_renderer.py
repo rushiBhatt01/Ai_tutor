@@ -18,7 +18,7 @@ from functions.visual_artifacts import (
     file_sha256, load_visual_manifest, probe_visual_video, save_visual_manifest,
     visual_cache_key, visual_scene_fingerprint,
 )
-from functions.visual_spec import trace_search, trace_traversal
+from functions.visual_spec import trace_search, trace_traversal, trace_bubble_sort, trace_merge_sort
 from functions.visual_acceptance import AttemptBudget, Check, candidate_checks, evaluate_checks
 
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
@@ -148,6 +148,22 @@ def _trace_for_manim(topic_type, steps, params):
         events = trace_search(values, target, binary=kind == "binary_search")
         return [event.model_dump() for event in events], {"values": values, "target": target}
 
+    if kind in {"bubble_sort", "sorting", "sort"}:
+        sort_defaults = [6, 2, 8, 4, 1]
+        values = params.get("values", sort_defaults)
+        if not isinstance(values, list) or len(values) > 10:
+            raise ValueError("Sorting templates require a list with at most 10 values")
+        events = trace_bubble_sort(values)
+        return [event.model_dump() for event in events], {"values": values}
+
+    if kind in {"merge_sort"}:
+        sort_defaults = [6, 2, 8, 4, 3, 7]
+        values = params.get("values", sort_defaults)
+        if not isinstance(values, list) or len(values) > 10:
+            raise ValueError("Merge sort template requires a list with at most 10 values")
+        events = trace_merge_sort(values)
+        return [event.model_dump() for event in events], {"values": values}
+
     if kind in {"bfs", "dfs"}:
         nodes = params.get("nodes", params.get("graph_nodes"))
         if nodes is None:
@@ -224,8 +240,12 @@ def build_manim_trace_events(topic_type, steps, target_duration, custom_params=N
 def validate_manim_template(topic_type, code, trace_events):
     """Fail closed if the generated template or trace omits algorithm-specific steps."""
     required = {
-        "binary_search": ("Low", "Mid", "High", "next_low"),
+        "binary_search": ("Low", "Mid", "High", "ptr_low"),
         "linear_search": ("Compare index", "TARGET"),
+        "bubble_sort": ("Bubble Sort", "elements"),
+        "merge_sort": ("Merge Sort", "DIVIDE"),
+        "sorting": ("Bubble Sort", "elements"),
+        "sort": ("Bubble Sort", "elements"),
         "bfs": ("QUEUE", "Level", "enqueue"),
         "dfs": ("STACK", "Backtrack", "push"),
     }.get(str(topic_type).casefold())
@@ -288,13 +308,12 @@ def generate_manim_python_code(
         "__HOLD__": repr(hold),
     }
 
-    search_template = r'''from manim import *
+    linear_search_template = r'''from manim import *
 
 TITLE = __TITLE__
 TRACE = __TRACE__
 VALUES = __VALUES__
 TARGET = __TARGET__
-IS_BINARY = __IS_BINARY__
 INTRO = __INTRO__
 CREATE_TIME = __CREATE__
 STEP_TIME = __STEP__
@@ -309,49 +328,291 @@ class GeneratedTechnicalScene(Scene):
         boxes, labels = [], []
         for index, value in enumerate(VALUES):
             x = (index - (count - 1) / 2) * gap
-            box = Square(side_length=max(0.35, gap - 0.08), color=BLUE).move_to([x, 0.15, 0])
-            label = Text(str(value)[:12], font_size=22).move_to(box.get_center())
+            box = Square(side_length=max(0.4, gap - 0.1), color=BLUE, stroke_width=2.5).move_to([x, 0.4, 0])
+            label = Text(str(value)[:12], font_size=22, color=WHITE).move_to(box.get_center())
             index_label = Text(str(index), font_size=14, color=GRAY).next_to(box, DOWN, buff=0.1)
             boxes.append(box)
             labels.extend([label, index_label])
         if boxes:
             self.play(Create(VGroup(*boxes)), Write(VGroup(*labels)), run_time=CREATE_TIME)
-        status = Text("Binary search" if IS_BINARY else "Linear search", font_size=20).to_edge(DOWN)
+        status = Text(f"Linear search: Target = {TARGET}", font_size=20).to_edge(DOWN)
         self.add(status)
-        if not TRACE:
-            status.become(Text("Target not found: empty input", font_size=20, color=RED).to_edge(DOWN))
         for event in TRACE:
             state = event["state"]
             index = state["index"]
             value = state["value"]
-            if IS_BINARY:
-                low, high = state["low"], state["high"]
-                status.become(Text(f"Low {low}    Mid {index}    High {high}    Compare {value} to {TARGET}", font_size=20).to_edge(DOWN))
-            else:
-                status.become(Text(f"Compare index {index}: {value} to {TARGET}", font_size=20).to_edge(DOWN))
-            color = GREEN if event["action"] == "found" else YELLOW
+            status.become(Text(f"Compare index {index}: {value} to {TARGET}", font_size=20).to_edge(DOWN))
+            color = GREEN if event["action"] == "found" else RED
             self.play(boxes[index].animate.set_fill(color, opacity=0.85), run_time=STEP_TIME)
             if event["action"] == "found":
-                status.become(Text(f"Found {TARGET} at index {index}", font_size=22, color=GREEN).to_edge(DOWN))
-            elif IS_BINARY:
-                next_low = index + 1 if value < TARGET else low
-                next_high = index - 1 if value > TARGET else high
-                for j, box in enumerate(boxes):
-                    if j < next_low or j > next_high:
-                        box.set_fill(GRAY, opacity=0.18)
-            else:
-                boxes[index].set_fill(RED, opacity=0.45)
+                status.become(Text(f"Found {TARGET} at index {index}!", font_size=22, color=GREEN).to_edge(DOWN))
+                break
         self.wait(HOLD)
 '''
 
-    if topic_type in {"binary_search", "linear_search"}:
-        code = _template_data(search_template, {
+    binary_search_template = r'''from manim import *
+
+TITLE = __TITLE__
+TRACE = __TRACE__
+VALUES = __VALUES__
+TARGET = __TARGET__
+INTRO = __INTRO__
+CREATE_TIME = __CREATE__
+STEP_TIME = __STEP__
+HOLD = __HOLD__
+
+class GeneratedTechnicalScene(Scene):
+    def construct(self):
+        title = Text(TITLE, font_size=30).to_edge(UP)
+        self.play(Write(title), run_time=INTRO)
+        count = len(VALUES)
+        gap = min(1.15, 8.5 / max(1, count))
+        boxes, labels = [], []
+        for index, value in enumerate(VALUES):
+            x = (index - (count - 1) / 2) * gap
+            box = Square(side_length=max(0.42, gap - 0.1), color=BLUE, stroke_width=2.5).move_to([x, 0.4, 0])
+            label = Text(str(value)[:12], font_size=24, color=WHITE).move_to(box.get_center())
+            idx_label = Text(f"[{index}]", font_size=14, color=GRAY).next_to(box, UP, buff=0.12)
+            boxes.append(box)
+            labels.extend([label, idx_label])
+        if boxes:
+            self.play(Create(VGroup(*boxes)), Write(VGroup(*labels)), run_time=CREATE_TIME)
+
+        ptr_low = VGroup(Arrow(start=DOWN*0.5, end=UP*0.1, color=BLUE, buff=0), Text("Low", font_size=16, color=BLUE).next_to(DOWN*0.5, DOWN, buff=0.05))
+        ptr_mid = VGroup(Arrow(start=DOWN*0.5, end=UP*0.1, color=YELLOW, buff=0), Text("Mid", font_size=16, color=YELLOW).next_to(DOWN*0.5, DOWN, buff=0.05))
+        ptr_high = VGroup(Arrow(start=DOWN*0.5, end=UP*0.1, color=PURPLE, buff=0), Text("High", font_size=16, color=PURPLE).next_to(DOWN*0.5, DOWN, buff=0.05))
+        
+        status = Text(f"Binary Search: Target = {TARGET}", font_size=20).to_edge(DOWN)
+        self.add(status)
+        
+        pointers_added = False
+        for event in TRACE:
+            state = event["state"]
+            mid = state["index"]
+            low = state["low"]
+            high = state["high"]
+            value = state["value"]
+            
+            pos_l = [boxes[low].get_center()[0], -0.45, 0]
+            pos_m = [boxes[mid].get_center()[0], -0.45, 0]
+            pos_h = [boxes[high].get_center()[0], -0.45, 0]
+            
+            if not pointers_added:
+                ptr_low.move_to(pos_l)
+                ptr_mid.move_to(pos_m)
+                ptr_high.move_to(pos_h)
+                self.play(FadeIn(ptr_low), FadeIn(ptr_mid), FadeIn(ptr_high), run_time=min(0.4, STEP_TIME*0.8))
+                pointers_added = True
+            else:
+                self.play(
+                    ptr_low.animate.move_to(pos_l),
+                    ptr_mid.animate.move_to(pos_m),
+                    ptr_high.animate.move_to(pos_h),
+                    run_time=min(0.35, STEP_TIME*0.6)
+                )
+            
+            if event["action"] == "found":
+                status.become(Text(f"Found Target {TARGET} at Mid index {mid}!", font_size=22, color=GREEN).to_edge(DOWN))
+                self.play(boxes[mid].animate.set_fill(GREEN, opacity=0.9).scale(1.1), run_time=STEP_TIME)
+                break
+            else:
+                cmp_text = f"Low {low} | Mid {mid} ({value}) < Target ({TARGET}) | High {high} -> Discard Left" if value < TARGET else f"Low {low} | Mid {mid} ({value}) > Target ({TARGET}) | High {high} -> Discard Right"
+                status.become(Text(cmp_text, font_size=18, color=YELLOW).to_edge(DOWN))
+                self.play(boxes[mid].animate.set_fill(YELLOW, opacity=0.8), run_time=STEP_TIME*0.5)
+                
+                if value < TARGET:
+                    for j in range(low, mid + 1):
+                        boxes[j].set_fill(GRAY, opacity=0.18)
+                else:
+                    for j in range(mid, high + 1):
+                        boxes[j].set_fill(GRAY, opacity=0.18)
+        self.wait(HOLD)
+'''
+
+    bubble_sort_template = r'''from manim import *
+
+TITLE = __TITLE__
+TRACE = __TRACE__
+VALUES = __VALUES__
+INTRO = __INTRO__
+CREATE_TIME = __CREATE__
+STEP_TIME = __STEP__
+HOLD = __HOLD__
+
+class GeneratedTechnicalScene(Scene):
+    def construct(self):
+        title = Text(TITLE, font_size=30).to_edge(UP)
+        self.play(Write(title), run_time=INTRO)
+        count = len(VALUES)
+        gap = min(1.2, 8.0 / max(1, count))
+        
+        palette = [BLUE, TEAL, GREEN_B, YELLOW, ORANGE, RED]
+        sorted_vals = sorted(VALUES)
+        
+        elements = []
+        for index, val in enumerate(VALUES):
+            x = (index - (count - 1) / 2) * gap
+            rank = sorted_vals.index(val)
+            col = palette[rank % len(palette)]
+            box = Square(side_length=0.75, color=col, stroke_width=2.5).move_to([x, 0.4, 0])
+            lbl = Text(str(val), font_size=26, color=WHITE).move_to(box.get_center())
+            elements.append(VGroup(box, lbl))
+            
+        self.play(*[Create(e) for e in elements], run_time=CREATE_TIME)
+        status = Text("Bubble Sort: Compare adjacent pairs and swap if out of order", font_size=20).to_edge(DOWN)
+        self.add(status)
+        
+        ptr = Arrow(start=DOWN*0.5, end=UP*0.1, color=YELLOW).next_to(elements[0], DOWN, buff=0.2)
+        self.play(FadeIn(ptr), run_time=0.3)
+        
+        for event in TRACE:
+            action = event["action"]
+            state = event["state"]
+            if action in {"compare", "swap"}:
+                j = state["j"]
+                val_a = state["val_a"]
+                val_b = state["val_b"]
+                elem_a = elements[j]
+                elem_b = elements[j + 1]
+                pos_a = elem_a.get_center()
+                pos_b = elem_b.get_center()
+                
+                ptr.next_to(VGroup(elem_a, elem_b), DOWN, buff=0.2)
+                
+                if action == "swap":
+                    status.become(Text(f"Swap {val_a} > {val_b}: Moving {val_a} right", font_size=20, color=ORANGE).to_edge(DOWN))
+                    self.play(
+                        elem_a.animate.move_to(pos_b),
+                        elem_b.animate.move_to(pos_a),
+                        run_time=min(0.4, STEP_TIME)
+                    )
+                    elements[j], elements[j + 1] = elements[j + 1], elements[j]
+                else:
+                    status.become(Text(f"{val_a} <= {val_b}: Already in order", font_size=20, color=GRAY).to_edge(DOWN))
+                    self.wait(min(0.2, STEP_TIME * 0.5))
+            elif action == "lock":
+                idx = state["index"]
+                status.become(Text(f"Element {state['value']} is locked in sorted position", font_size=20, color=GREEN).to_edge(DOWN))
+                self.play(elements[idx][0].animate.set_color(GREEN).set_stroke(GREEN, width=4), run_time=min(0.3, STEP_TIME*0.6))
+            elif action == "sorted":
+                status.become(Text("Array is fully sorted!", font_size=22, color=GREEN).to_edge(DOWN))
+                self.play(*[e[0].animate.set_fill(GREEN, opacity=0.7) for e in elements], run_time=0.5)
+        self.wait(HOLD)
+'''
+
+    merge_sort_template = r'''from manim import *
+
+TITLE = __TITLE__
+TRACE = __TRACE__
+VALUES = __VALUES__
+INTRO = __INTRO__
+CREATE_TIME = __CREATE__
+STEP_TIME = __STEP__
+HOLD = __HOLD__
+
+class GeneratedTechnicalScene(Scene):
+    def construct(self):
+        title = Text(TITLE, font_size=30).to_edge(UP)
+        self.play(Write(title), run_time=INTRO)
+        count = len(VALUES)
+        gap = 0.9
+        
+        def make_row(vals, y_pos, color=BLUE):
+            boxes, labels = [], []
+            n = len(vals)
+            for i, v in enumerate(vals):
+                x = (i - (n - 1) / 2) * gap
+                b = Square(side_length=0.6, color=color, stroke_width=2.5).move_to([x, y_pos, 0])
+                l = Text(str(v), font_size=24, color=WHITE).move_to(b.get_center())
+                boxes.append(b)
+                labels.append(l)
+            return VGroup(*boxes, *labels)
+        
+        top_row = make_row(VALUES, 1.8, color=RED_C)
+        lbl_top = Text("Unsorted Array", font_size=18, color=GRAY).next_to(top_row, UP, buff=0.15)
+        self.play(Create(top_row), Write(lbl_top), run_time=CREATE_TIME)
+        
+        status = Text("Merge Sort: Divide & Conquer", font_size=20).to_edge(DOWN)
+        self.add(status)
+        
+        mid = count // 2
+        left_vals = VALUES[:mid]
+        right_vals = VALUES[mid:]
+        
+        status.become(Text(f"1. DIVIDE: Split into {left_vals} and {right_vals}", font_size=20, color=YELLOW).to_edge(DOWN))
+        
+        n_l = len(left_vals)
+        boxes_l, lbls_l = [], []
+        for i, v in enumerate(left_vals):
+            x = -2.5 + (i - (n_l - 1) / 2) * gap
+            b = Square(side_length=0.6, color=BLUE, stroke_width=2).move_to([x, 0.3, 0])
+            l = Text(str(v), font_size=24, color=WHITE).move_to(b.get_center())
+            boxes_l.append(b)
+            lbls_l.append(l)
+        left_group = VGroup(*boxes_l, *lbls_l)
+        
+        n_r = len(right_vals)
+        boxes_r, lbls_r = [], []
+        for i, v in enumerate(right_vals):
+            x = 2.5 + (i - (n_r - 1) / 2) * gap
+            b = Square(side_length=0.6, color=BLUE, stroke_width=2).move_to([x, 0.3, 0])
+            l = Text(str(v), font_size=24, color=WHITE).move_to(b.get_center())
+            boxes_r.append(b)
+            lbls_r.append(l)
+        right_group = VGroup(*boxes_r, *lbls_r)
+        
+        arr_l = Arrow(start=[0, 1.4, 0], end=[-2.5, 0.8, 0], color=GRAY, buff=0.1)
+        arr_r = Arrow(start=[0, 1.4, 0], end=[2.5, 0.8, 0], color=GRAY, buff=0.1)
+        self.play(Create(arr_l), Create(arr_r), FadeIn(left_group), FadeIn(right_group), run_time=0.6)
+        
+        sorted_l = sorted(left_vals)
+        sorted_r = sorted(right_vals)
+        status.become(Text("2. RECURSE: Sort sub-arrays independently", font_size=20, color=ORANGE).to_edge(DOWN))
+        
+        new_lbls_l = [Text(str(v), font_size=24, color=YELLOW).move_to(b.get_center()) for b, v in zip(boxes_l, sorted_l)]
+        new_lbls_r = [Text(str(v), font_size=24, color=YELLOW).move_to(b.get_center()) for b, v in zip(boxes_r, sorted_r)]
+        self.play(
+            *[Transform(old, new) for old, new in zip(lbls_l, new_lbls_l)],
+            *[Transform(old, new) for old, new in zip(lbls_r, new_lbls_r)],
+            run_time=0.5
+        )
+        
+        final_sorted = sorted(VALUES)
+        status.become(Text("3. MERGE: Combine sorted halves into final array", font_size=20, color=GREEN).to_edge(DOWN))
+        final_row = make_row(final_sorted, -1.2, color=GREEN)
+        arr_merge_l = Arrow(start=[-2.5, -0.1, 0], end=[-0.8, -0.8, 0], color=GREEN, buff=0.1)
+        arr_merge_r = Arrow(start=[2.5, -0.1, 0], end=[0.8, -0.8, 0], color=GREEN, buff=0.1)
+        self.play(Create(arr_merge_l), Create(arr_merge_r), Create(final_row), run_time=0.8)
+        
+        status.become(Text("Merge Sort Complete: O(n log n)", font_size=22, color=GREEN).to_edge(DOWN))
+        self.wait(HOLD)
+'''
+
+    if topic_type == "binary_search":
+        return _template_data(binary_search_template, {
             **common,
             "__VALUES__": _python_literal(data["values"]),
             "__TARGET__": _python_literal(data["target"]),
-            "__IS_BINARY__": repr(topic_type == "binary_search"),
         })
-        return code
+
+    if topic_type == "linear_search":
+        return _template_data(linear_search_template, {
+            **common,
+            "__VALUES__": _python_literal(data["values"]),
+            "__TARGET__": _python_literal(data["target"]),
+        })
+
+    if topic_type in {"bubble_sort", "sorting", "sort"}:
+        return _template_data(bubble_sort_template, {
+            **common,
+            "__VALUES__": _python_literal(data["values"]),
+        })
+
+    if topic_type == "merge_sort":
+        return _template_data(merge_sort_template, {
+            **common,
+            "__VALUES__": _python_literal(data["values"]),
+        })
 
     graph_template = r'''from manim import *
 
@@ -828,7 +1089,7 @@ def render_all_visual_scenes(run_dir: str, storyboard=None, visual_specs=None) -
                 source_provider = record.get("selected_image_source")
                 if (provenance_matches and source_url and asset_url and record.get("creator")
                         and record.get("license_id") and record.get("attribution")
-                        and source_provider in {"pixabay", "wikimedia_commons", "unsplash", "pexels", "giphy"}
+                        and source_provider in {"pixabay", "wikimedia_commons", "unsplash", "pexels"}
                         and artifact.requested_strategy in {"web_image", "hybrid_image", "hybrid_gif"}):
                     artifact.source = ImageSource(
                         source_url=source_url, asset_url=asset_url,

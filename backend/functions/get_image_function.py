@@ -323,6 +323,50 @@ class SlideCanvasRenderer:
                     draw.line((start[0], start[1], end[0], end[1]), fill=theme["accent"], width=2)
                 for (cx, cy), label in zip(positions, labels):
                     draw_node((cx - 65, cy - 25, cx + 65, cy + 25), label)
+            elif layout_type in {"semantic_triple", "triple"} or any(k in f"{title} {visual_query}".lower() for k in ("triple", "rdf", "predicate", "sparql")):
+                draw.text((750, 118), "SEMANTIC TRIPLE (RDF DATA MODEL)", fill=theme["accent"], font=self.cat_font)
+                def draw_triple_row(y_center, subj_text, pred_text, obj_text, is_schema=False):
+                    box_h = 42
+                    s_box = [745, y_center - box_h // 2, 875, y_center + box_h // 2]
+                    s_bg = theme["badge_bg"] if not is_schema else (24, 34, 52)
+                    s_border = theme["accent"] if not is_schema else (100, 116, 139)
+                    draw.rounded_rectangle(s_box, radius=8, fill=s_bg, outline=s_border, width=2 if not is_schema else 1)
+                    s_bounds = draw.textbbox((0, 0), subj_text, font=self.cat_font)
+                    draw.text(((s_box[0] + s_box[2] - s_bounds[2] + s_bounds[0]) / 2, y_center - 9), subj_text, fill=theme["text_white"], font=self.cat_font)
+
+                    arrow_start_x = 880
+                    arrow_end_x = 1070
+                    draw.line([(arrow_start_x, y_center), (arrow_end_x, y_center)], fill=theme["accent"], width=2)
+                    draw.polygon([(arrow_end_x - 6, y_center - 5), (arrow_end_x + 2, y_center), (arrow_end_x - 6, y_center + 5)], fill=theme["accent"])
+
+                    p_bounds = draw.textbbox((0, 0), pred_text, font=self.cat_font)
+                    p_w = max(p_bounds[2] - p_bounds[0] + 16, 68)
+                    p_center_x = (arrow_start_x + arrow_end_x) // 2
+                    p_box = [p_center_x - p_w // 2, y_center - 13, p_center_x + p_w // 2, y_center + 13]
+                    p_color = (251, 146, 60) if not is_schema else (148, 163, 184)
+                    draw.rounded_rectangle(p_box, radius=6, fill=(15, 23, 42), outline=p_color, width=1)
+                    draw.text(((p_box[0] + p_box[2] - p_bounds[2] + p_bounds[0]) / 2, y_center - 9), pred_text, fill=p_color, font=self.cat_font)
+
+                    o_box = [1075, y_center - box_h // 2, 1205, y_center + box_h // 2]
+                    o_border = (52, 211, 153) if not is_schema else (100, 116, 139)
+                    draw.rounded_rectangle(o_box, radius=8, fill=s_bg, outline=o_border, width=2 if not is_schema else 1)
+                    o_bounds = draw.textbbox((0, 0), obj_text, font=self.cat_font)
+                    draw.text(((o_box[0] + o_box[2] - o_bounds[2] + o_bounds[0]) / 2, y_center - 9), obj_text, fill=theme["text_white"], font=self.cat_font)
+
+                draw_triple_row(170, "Subject", "predicate", "Object", is_schema=True)
+                subj1 = labels[0] if len(labels) > 0 and labels[0] != title[:24] else "Marie Curie"
+                pred1 = labels[1] if len(labels) > 1 else "won"
+                obj1 = labels[2] if len(labels) > 2 else "Nobel Prize"
+                draw_triple_row(236, subj1, pred1, obj1)
+                subj2 = obj1
+                pred2 = labels[3] if len(labels) > 3 else "field"
+                obj2 = "Physics" if subj2 == "Nobel Prize" else "Knowledge"
+                draw_triple_row(302, subj2, pred2, obj2)
+
+                draw.rounded_rectangle([745, 350, 1205, 390], radius=6, fill=(15, 23, 42), outline=(51, 65, 85), width=1)
+                summary_text = "Nodes = Entities (S, O)  |  Edges = Predicates (P)"
+                sum_b = draw.textbbox((0, 0), summary_text, font=self.cat_font)
+                draw.text(((745 + 1205 - sum_b[2] + sum_b[0]) / 2, 362), summary_text, fill=theme["text_muted"], font=self.cat_font)
             else:
                 center = (975, 275)
                 satellites = [(840, 205), (1110, 205), (840, 345), (1110, 345)][:max(0, len(labels) - 1)]
@@ -422,16 +466,6 @@ def get_image(chunk_queries: List[Dict[str, Any]] | Dict[str, Dict[str, Any]], t
         from functions.image_providers import ImageSearchService
         search_service = ImageSearchService()
 
-    # ── Giphy provider for hybrid_gif scenes ──
-    giphy_provider = None
-    if any(entry.get("visual_type") == "hybrid_gif" for entry in entries):
-        try:
-            from functions.giphy_provider import GiphyProvider
-            giphy_provider = GiphyProvider()
-            print("  🎞️ Giphy provider initialized for hybrid_gif scenes")
-        except Exception as giphy_err:
-            print(f"  ⚠️ Giphy provider unavailable: {giphy_err}")
-
     # Extract topic_name from chunk_queries if not provided
     if not topic_name and entries:
         topic_name = entries[0].get("chunk_text", "")[:30] if entries[0].get("chunk_text") else ""
@@ -458,42 +492,7 @@ def get_image(chunk_queries: List[Dict[str, Any]] | Dict[str, Dict[str, Any]], t
         animated_media_type = None
         visual_type = entry.get("visual_type", "slide")
 
-        # ── Giphy animated media retrieval for hybrid_gif scenes ──
-        if visual_type == "hybrid_gif" and giphy_provider is not None:
-            try:
-                giphy_result = giphy_provider.find_best(visual_query)
-                if giphy_result and giphy_result.local_path:
-                    animated_media_path = giphy_result.local_path
-                    animated_media_type = giphy_result.media_type
-                    attribution = {
-                        "provider": "giphy",
-                        "search_query": visual_query,
-                        "candidate_count": 1,
-                        "page_url": giphy_result.gif_url,
-                        "image_url": giphy_result.mp4_url or giphy_result.gif_url,
-                        "creator": "GIPHY",
-                        "license_id": "GIPHY User Terms",
-                        "license_url": "https://giphy.com/terms",
-                        "attribution": giphy_result.attribution,
-                        "retrieved_at": datetime.now(timezone.utc).isoformat(),
-                        "semantic_score": 1.0,
-                        "quality_score": 1.0,
-                    }
-                    search_data.update(
-                        query=visual_query,
-                        candidate_count=1,
-                        attempt_count=1,
-                        source=attribution,
-                    )
-                    print(f"  🎞️ [{chunk_id}] Giphy animation: {giphy_result.title}")
-                else:
-                    print(f"  ⚠️ [{chunk_id}] No Giphy result; falling back to hybrid_image")
-                    visual_type = "hybrid_image"  # graceful degradation
-            except Exception as giphy_err:
-                print(f"  ⚠️ [{chunk_id}] Giphy error: {giphy_err}; falling back to hybrid_image")
-                visual_type = "hybrid_image"
-
-        if search_service is not None and entry.get("image_search_enabled", True) and not animated_media_path:
+        if search_service is not None and entry.get("image_search_enabled", True):
             try:
                 selected, attribution, query, attempts, rejected = search_service.find(
                     entry.get("chunk_text", ""), visual_query,

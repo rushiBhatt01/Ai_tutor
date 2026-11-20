@@ -116,10 +116,16 @@ def classify_topic(state: PipelineState) -> dict:
                 topic_type = "bfs"
             elif "dfs" in lower or "depth" in lower:
                 topic_type = "dfs"
+            elif "merge" in lower and "sort" in lower:
+                topic_type = "merge_sort"
+            elif "bubble" in lower and "sort" in lower:
+                topic_type = "bubble_sort"
             elif "sort" in lower:
                 topic_type = "sorting"
             elif "binary" in lower and "search" in lower:
                 topic_type = "binary_search"
+            elif "linear" in lower and "search" in lower:
+                topic_type = "linear_search"
             else:
                 topic_type = "graph_traversal"
         else:
@@ -334,7 +340,7 @@ def plan_manim_scenes(state: PipelineState) -> dict:
             "Output a JSON object with key \"manim_scenes\" containing an array of scene specs.\n"
             "Each scene spec has:\n"
             "- \"topic_type\": one of 'bfs', 'dfs', 'graph_traversal', 'tree_traversal', "
-            "'binary_search', 'sorting', 'dynamic_programming', 'generic_algorithm'\n"
+            "'binary_search', 'linear_search', 'merge_sort', 'bubble_sort', 'sorting', 'dynamic_programming', 'generic_algorithm'\n"
             "- \"scene_title\": short title for the animation (max 50 chars)\n"
             "- \"steps\": array of labeled elements in visitation ORDER as spoken in the script "
             "(e.g., [\"A\", \"B\", \"C\", \"D\", \"E\"] for graph nodes, or [\"12\", \"24\", \"37\"] for array values)\n"

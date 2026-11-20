@@ -96,6 +96,60 @@ def trace_search(values: list, target: Any, *, binary: bool = False) -> list[Tra
     return events
 
 
+def trace_bubble_sort(values: list) -> list[TraceEvent]:
+    """Create deterministic swap and comparison events for bubble sort."""
+    arr = list(values)
+    n = len(arr)
+    events = []
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            val_a, val_b = arr[j], arr[j + 1]
+            will_swap = val_a > val_b
+            events.append(TraceEvent(
+                step=len(events),
+                action="swap" if will_swap else "compare",
+                state={"i": i, "j": j, "val_a": val_a, "val_b": val_b, "swap": will_swap, "array": list(arr)}
+            ))
+            if will_swap:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+        events.append(TraceEvent(
+            step=len(events),
+            action="lock",
+            state={"index": n - 1 - i, "value": arr[n - 1 - i], "array": list(arr)}
+        ))
+    events.append(TraceEvent(
+        step=len(events),
+        action="sorted",
+        state={"array": list(arr)}
+    ))
+    return events
+
+
+def trace_merge_sort(values: list) -> list[TraceEvent]:
+    """Create deterministic divide and merge events for merge sort."""
+    events = []
+    arr = list(values)
+    mid = len(arr) // 2
+    left_half = arr[:mid]
+    right_half = arr[mid:]
+    events.append(TraceEvent(
+        step=len(events),
+        action="split",
+        state={"phase": "split_halves", "left": left_half, "right": right_half, "array": list(arr)}
+    ))
+    events.append(TraceEvent(
+        step=len(events),
+        action="merge_pairs",
+        state={"phase": "merge_subarrays", "left_sorted": sorted(left_half), "right_sorted": sorted(right_half), "array": list(arr)}
+    ))
+    events.append(TraceEvent(
+        step=len(events),
+        action="sorted",
+        state={"phase": "final_merge", "array": sorted(arr)}
+    ))
+    return events
+
+
 def trace_traversal(nodes: list, edges: list[tuple], start: Any, *, breadth_first: bool) -> list[TraceEvent]:
     """Return deterministic visit and frontier-operation events in neighbor order."""
     if len(set(nodes)) != len(nodes):

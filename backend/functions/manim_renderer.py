@@ -180,6 +180,100 @@ def _trace_for_manim(topic_type, steps, params):
     raise ValueError(f"Unsupported Manim algorithm: {kind or 'unspecified'}")
 
 
+# ── Dynamic LLM-powered Manim code generation (Option A fallback) ──
+
+_DYNAMIC_MANIM_SYSTEM = (
+    "You are a Manim Community v0.18+ expert. Write a SINGLE self-contained Python "
+    "script that creates a class `GeneratedTechnicalScene(Scene)` animating the "
+    "requested concept.\n\n"
+    "HARD RULES:\n"
+    "- Import ONLY `from manim import *`. No other imports.\n"
+    "- The total animation run_time across all self.play() and self.wait() calls "
+    "must sum to exactly TARGET_DURATION seconds (passed as a constant).\n"
+    "- Canvas is 1280x720. Keep all objects within x ∈ [-5.5, 5.5], y ∈ [-3.5, 3.5].\n"
+    "- Use font_size ≤ 30 for body text. Title font_size ≤ 36.\n"
+    "- NO file I/O, network calls, subprocess, eval, exec, or __import__.\n"
+    "- Output ONLY the Python code. No markdown fences, no explanation.\n"
+)
+
+
+def generate_dynamic_manim_code(
+    topic_type: str,
+    scene_title: str,
+    narration: str,
+    target_duration: float,
+    max_retries: int = 1,
+) -> Optional[str]:
+    """Ask an LLM to write Manim code for topics without a pre-built template.
+
+    Returns the Python source string on success, or None after exhausting retries.
+    """
+    try:
+        from functions.llm_providers import invoke_with_fallback
+    except ImportError:
+        print("[Manim Dynamic] LLM provider not available; skipping dynamic generation.")
+        return None
+
+    duration = max(1.0, min(60.0, float(target_duration)))
+    prompt = (
+        f"Topic: {topic_type}\n"
+        f"Scene title: {scene_title}\n"
+        f"Narration context: {narration[:600]}\n"
+        f"TARGET_DURATION = {duration:.2f}  # seconds — all animations must sum to this\n\n"
+        "Write the Manim script now."
+    )
+
+    last_error = None
+    for attempt in range(1 + max_retries):
+        try:
+            messages_payload = [
+                {"role": "system", "content": _DYNAMIC_MANIM_SYSTEM},
+                {"role": "user", "content": prompt if attempt == 0 else (
+                    f"{prompt}\n\nYour previous attempt failed with this error:\n{last_error}\n"
+                    "Fix it and output only the corrected Python code."
+                )},
+            ]
+            # invoke_with_fallback accepts LangChain message objects
+            from langchain_core.messages import SystemMessage as SM, HumanMessage as HM
+            lc_messages = [
+                SM(content=messages_payload[0]["content"]),
+                HM(content=messages_payload[1]["content"]),
+            ]
+            code = invoke_with_fallback(lc_messages, temperature=0.15, max_tokens=3000)
+            if not code or "GeneratedTechnicalScene" not in code:
+                last_error = "Output did not contain GeneratedTechnicalScene class."
+                print(f"[Manim Dynamic] Attempt {attempt + 1}: {last_error}")
+                continue
+
+            # Strip markdown fences if present
+            code = re.sub(r"^```(?:python)?\s*\n", "", code.strip())
+            code = re.sub(r"\n```\s*$", "", code.strip())
+
+            # Basic safety: reject dangerous patterns
+            _FORBIDDEN = re.compile(
+                r"\b(?:subprocess|os\.system|exec|eval|__import__|open\s*\(|"
+                r"shutil|socket|requests|urllib|http\.client)\b"
+            )
+            if _FORBIDDEN.search(code):
+                last_error = "Generated code contains forbidden calls."
+                print(f"[Manim Dynamic] Attempt {attempt + 1}: {last_error}")
+                continue
+
+            # Inject TARGET_DURATION constant at the top of the script
+            if "TARGET_DURATION" not in code:
+                code = f"TARGET_DURATION = {duration:.2f}\n\n" + code
+
+            print(f"[Manim Dynamic] Attempt {attempt + 1}: Code generated ({len(code)} chars)")
+            return code
+
+        except Exception as gen_err:
+            last_error = str(gen_err)[:400]
+            print(f"[Manim Dynamic] Attempt {attempt + 1} LLM error: {last_error}")
+
+    print(f"[Manim Dynamic] All attempts exhausted for '{topic_type}'; falling back to slide.")
+    return None
+
+
 def _template_data(template, replacements):
     return re.sub(r"__[A-Z_]+__", lambda match: replacements.get(match.group(0), match.group(0)), template)
 
@@ -970,6 +1064,9 @@ def render_scene_manim(
     for name in ("values", "target", "nodes", "edges", "start"):
         if name in scene_spec and scene_spec[name] is not None:
             params.setdefault(name, scene_spec[name])
+    # ── Try deterministic template first; fall back to dynamic LLM generation ──
+    use_dynamic = False
+    code = None
     try:
         scene_spec["_trace_events"] = build_manim_trace_events(
             topic_type, steps, duration, params,
@@ -983,10 +1080,30 @@ def render_scene_manim(
         )
         validate_manim_template(topic_type, code, scene_spec["_trace_events"])
     except (TypeError, ValueError, KeyError) as error:
-        print(f"[Manim Fallback] Invalid or unsupported algorithm trace for {chunk_id}: {error}")
-        scene_spec["_fallback_reason"] = f"Invalid or unsupported algorithm trace: {error}"
-        create_manim_fallback_slide(scene_title, steps, output_image)
-        return output_image
+        is_unsupported = "Unsupported Manim algorithm" in str(error)
+        if is_unsupported:
+            print(f"[Manim Dynamic] No template for '{topic_type}'; trying LLM generation...")
+            narration = scene_spec.get("narration", "") or scene_spec.get("scene_title", "")
+            code = generate_dynamic_manim_code(
+                topic_type=topic_type,
+                scene_title=scene_title,
+                narration=narration,
+                target_duration=duration,
+            )
+            if code:
+                use_dynamic = True
+                scene_spec["_trace_events"] = []  # dynamic scenes have no deterministic trace
+                scene_spec["_dynamic_generated"] = True
+            else:
+                print(f"[Manim Fallback] Dynamic generation failed for {chunk_id}; using slide.")
+                scene_spec["_fallback_reason"] = f"Dynamic Manim generation failed for '{topic_type}'"
+                create_manim_fallback_slide(scene_title, steps, output_image)
+                return output_image
+        else:
+            print(f"[Manim Fallback] Invalid algorithm trace for {chunk_id}: {error}")
+            scene_spec["_fallback_reason"] = f"Invalid or unsupported algorithm trace: {error}"
+            create_manim_fallback_slide(scene_title, steps, output_image)
+            return output_image
 
     success = render_manim_to_mp4(
         scene_code=code,
@@ -996,14 +1113,18 @@ def render_scene_manim(
     )
 
     if success and os.path.isfile(output_video):
-        try:
-            scene_spec["_validation_evidence"] = validate_manim_trace_frames(
-                output_video, scene_spec.get("_trace_events", []), duration,
-            )
-        except Exception as error:
-            print(f"[Manim Fallback] Trace frame validation failed for {chunk_id}: {error}")
-            scene_spec["_fallback_reason"] = f"Trace frame validation failed: {error}"
-            success = False
+        # Dynamic scenes skip deterministic trace-frame validation (no trace events)
+        if not use_dynamic:
+            try:
+                scene_spec["_validation_evidence"] = validate_manim_trace_frames(
+                    output_video, scene_spec.get("_trace_events", []), duration,
+                )
+            except Exception as error:
+                print(f"[Manim Fallback] Trace frame validation failed for {chunk_id}: {error}")
+                scene_spec["_fallback_reason"] = f"Trace frame validation failed: {error}"
+                success = False
+        else:
+            scene_spec["_validation_evidence"] = ["dynamic LLM-generated scene rendered successfully"]
 
     if success and os.path.isfile(output_video):
         print(f"[Manim OK] Rendered {chunk_id} to {output_video} ({duration:.2f}s)")

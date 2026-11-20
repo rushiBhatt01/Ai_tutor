@@ -91,8 +91,10 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
         if not isinstance(spec, dict) or not topic_type:
             return VisualRoute("pillow", "Algorithm animation has no valid specification; using Pillow.")
         if topic_type not in SUPPORTED_ANIMATIONS:
+            if manim_available:
+                return VisualRoute("manim", f"Unsupported template '{topic_type}'; will attempt dynamic LLM generation.")
             if web_images_available:
-                return VisualRoute("hybrid_image", f"Unsupported animation '{topic_type}'; using a hybrid slide with architectural diagram.")
+                return VisualRoute("hybrid_image", f"Unsupported animation '{topic_type}' and Manim disabled; using a hybrid slide with architectural diagram.")
             return VisualRoute("pillow", f"Unsupported animation '{topic_type}'; using Pillow.")
         if not manim_available:
             return VisualRoute("pillow", "Manim is disabled; using Pillow.")
@@ -111,6 +113,8 @@ def route_scene(scene, capabilities=None) -> VisualRoute:
         return VisualRoute("pillow", "Web image retrieval is disabled; using Pillow.")
     if requested == "manim":
         if topic_type and topic_type not in SUPPORTED_ANIMATIONS:
+            if manim_available:
+                return VisualRoute("manim", f"Unsupported template '{topic_type}'; will attempt dynamic LLM generation.")
             if web_images_available:
                 return VisualRoute("hybrid_image", f"Unsupported animation '{topic_type}'; using a hybrid slide with architectural diagram.")
             return VisualRoute("pillow", f"Unsupported animation '{topic_type}'; using Pillow.")

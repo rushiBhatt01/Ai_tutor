@@ -5,21 +5,21 @@ import asyncio
 import math
 from bson import ObjectId
 
-from functions.create_audio_image_function import create_audio_image
-from functions.create_script_function import create_script
-from functions.create_storyboard_function import create_storyboard
-from functions.langgraph_pipeline import run_script_pipeline
-from functions.create_video_from_audio_function import create_video_from_audio
-from functions.create_image_videos_function import create_image_videos
-from functions.visual_artifacts import atomic_output
-from functions.visual_pipeline_graph import run_visual_pipeline
-from functions.combine_videos_function import combine_videos
-from functions.cache_utils import find_cached_video
-from functions.checkpoint_manager import (
+from functions.pipeline.create_audio_image_function import create_audio_image
+from functions.script.create_script_function import create_script
+from functions.script.create_storyboard_function import create_storyboard
+from functions.script.langgraph_pipeline import run_script_pipeline
+from functions.video.create_video_from_audio_function import create_video_from_audio
+from functions.video.create_image_videos_function import create_image_videos
+from functions.visual.visual_artifacts import atomic_output
+from functions.visual.visual_pipeline_graph import run_visual_pipeline
+from functions.video.combine_videos_function import combine_videos
+from functions.pipeline.cache_utils import find_cached_video
+from functions.pipeline.checkpoint_manager import (
     init_run, load_checkpoint, update_stage_status, append_event_log,
     release_lock, get_run_dir, PIPELINE_STAGES, canonical_stage
 )
-from functions.dag_evaluator import evaluate_run_dag
+from functions.pipeline.dag_evaluator import evaluate_run_dag
 from media_store import upload_file
 
 async def video_main(
@@ -124,7 +124,7 @@ async def video_main(
 
             target_file = storyboard_file if os.path.exists(storyboard_file) else os.path.join(run_dir, "storyboard.json")
             if os.path.exists(target_file):
-                from functions.storyboard_schema import Storyboard as StoryboardSchema
+                from functions.script.storyboard_schema import Storyboard as StoryboardSchema
                 with open(target_file, "r", encoding="utf-8") as f:
                     storyboard = StoryboardSchema.model_validate_json(f.read())
             elif script_text:
@@ -144,7 +144,7 @@ async def video_main(
                 with open(plan_temp, "w", encoding="utf-8") as stream:
                     json.dump({"schema_version": 1, "scenes": visual_plan}, stream, indent=2)
             if not visual_specs:
-                from functions.langgraph_pipeline import _validated_visual_specs
+                from functions.script.langgraph_pipeline import _validated_visual_specs
                 visual_specs = _validated_visual_specs(storyboard)
             specs_file = os.path.join(run_dir, "artifacts", "visual_specs.json")
             with atomic_output(specs_file) as specs_temp:

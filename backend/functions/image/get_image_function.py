@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Any
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from functions.visual_artifacts import file_sha256
+from functions.visual.visual_artifacts import file_sha256
 
 
 def _safe_slide_text(value: Any) -> str:
@@ -463,7 +463,7 @@ def get_image(chunk_queries: List[Dict[str, Any]] | Dict[str, Dict[str, Any]], t
     total_slides = len(entries)
     if (search_service is None and any(entry.get("image_search_enabled", True) for entry in entries)
             and os.environ.get("IMAGE_SEARCH_ENABLED", "true").casefold() not in {"0", "false", "no"}):
-        from functions.image_providers import ImageSearchService
+        from functions.image.image_providers import ImageSearchService
         search_service = ImageSearchService()
 
     # Extract topic_name from chunk_queries if not provided
@@ -498,6 +498,7 @@ def get_image(chunk_queries: List[Dict[str, Any]] | Dict[str, Dict[str, Any]], t
                     entry.get("chunk_text", ""), visual_query,
                     must_show=entry.get("must_show", ()),
                     must_not_show=entry.get("must_not_show", ()),
+                    topic_name=topic_name,
                 )
                 search_data.update(query=query, attempt_count=attempts, rejected=rejected,
                                    candidate_count=int(attribution.get("candidate_count", 1)) if selected and attribution else 0)

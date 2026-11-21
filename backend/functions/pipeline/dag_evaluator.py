@@ -4,8 +4,8 @@ import json
 import subprocess
 from PIL import Image
 from typing import Dict, Any, Tuple, Optional
-from functions.checkpoint_manager import load_checkpoint, save_checkpoint, get_run_dir, PIPELINE_STAGES
-from functions.visual_artifacts import manifest_video_paths
+from functions.pipeline.checkpoint_manager import load_checkpoint, save_checkpoint, get_run_dir, PIPELINE_STAGES
+from functions.visual.visual_artifacts import manifest_video_paths
 
 MIN_AUDIO_BYTES = 1000
 MIN_IMAGE_BYTES = 6000

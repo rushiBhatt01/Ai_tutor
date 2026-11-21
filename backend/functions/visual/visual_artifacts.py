@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from functions.visual_acceptance import AcceptanceResult, Verdict
+from functions.visual.visual_acceptance import AcceptanceResult, Verdict
 
 
 MANIFEST_PATH = Path("artifacts/visual_manifest.json")

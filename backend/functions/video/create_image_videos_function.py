@@ -3,7 +3,7 @@ import re
 import json
 import ffmpeg
 import subprocess
-from functions.visual_artifacts import atomic_output, probe_visual_video
+from functions.visual.visual_artifacts import atomic_output, probe_visual_video
 
 
 def _load_visual_manifest(timestamp: str) -> dict:

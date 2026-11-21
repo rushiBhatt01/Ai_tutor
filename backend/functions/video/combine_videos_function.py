@@ -8,7 +8,7 @@ import json
 from bson import ObjectId
 from db import set_cached_video
 from media_store import upload_file
-from functions.visual_artifacts import manifest_video_paths
+from functions.visual.visual_artifacts import manifest_video_paths
 
 
 def match_chunk_videos(character_folder, image_folder):
@@ -147,7 +147,7 @@ async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
         delay_seconds = int(os.getenv("CACHE_POST_DELAY", "3"))
     if env == "local":
         # Save to frontend's public/prev_videos folder
-        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/topic2explanation/public/prev_videos"))
+        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../frontend/topic2explanation/public/prev_videos"))
         os.makedirs(frontend_cache_dir, exist_ok=True)
         temp_name = f".{topic_name}.tmp.mp4"
         temp_path = os.path.join(frontend_cache_dir, temp_name)
@@ -180,7 +180,7 @@ async def combine_videos(timestamp, topic_name, override_delay_seconds=None):
         
         # Fallback to local storage if MongoDB is unavailable
         print("⚠️ MongoDB upload returned None, falling back to local file response.")
-        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend/topic2explanation/public/prev_videos"))
+        frontend_cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../frontend/topic2explanation/public/prev_videos"))
         os.makedirs(frontend_cache_dir, exist_ok=True)
         final_dest = os.path.join(frontend_cache_dir, f"{topic_name}.mp4")
         shutil.copyfile(final_video_path, final_dest)

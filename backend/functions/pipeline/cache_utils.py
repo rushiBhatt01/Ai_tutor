@@ -6,9 +6,9 @@ def get_cache_dirs():
     base_dir = os.path.dirname(__file__)
     dirs = [
         # Primary location: frontend static assets folder
-        os.path.abspath(os.path.join(base_dir, "../../frontend/topic2explanation/public/prev_videos")),
+        os.path.abspath(os.path.join(base_dir, "../../../frontend/topic2explanation/public/prev_videos")),
         # Secondary/fallback location: backend local storage
-        os.path.abspath(os.path.join(base_dir, "../prev_videos")),
+        os.path.abspath(os.path.join(base_dir, "../../prev_videos")),
     ]
     return dirs
 

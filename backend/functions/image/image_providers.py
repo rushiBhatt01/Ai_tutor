@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import requests
 from PIL import Image, ImageOps, ImageStat
 
-from functions.visual_artifacts import atomic_output
+from functions.visual.visual_artifacts import atomic_output
 
 
 _RATE_LIMIT_LOCK = threading.Lock()
@@ -285,8 +285,8 @@ class ImageProviderConfig:
     providers: tuple[str, ...] = ("pixabay", "wikimedia_commons", "unsplash")
     max_attempts: int = 2
     candidate_limit: int = 12
-    min_semantic_score: float = 0.24
-    min_required_feature_score: float = 0.14
+    min_semantic_score: float = 0.26
+    min_required_feature_score: float = 0.20
     max_excluded_feature_score: float = 0.26
     min_width: int = 480
     min_height: int = 270
@@ -339,8 +339,8 @@ class ImageProviderConfig:
         return cls(providers=providers,
                    max_attempts=max(1, min(int(os.environ.get("IMAGE_QUERY_ATTEMPTS", "2")), 3)),
                    candidate_limit=max(1, min(int(os.environ.get("IMAGE_CANDIDATE_LIMIT", "12")), 20)),
-                   min_semantic_score=float(os.environ.get("IMAGE_MIN_SEMANTIC_SCORE", "0.24")),
-                   min_required_feature_score=float(os.environ.get("IMAGE_MIN_REQUIRED_FEATURE_SCORE", "0.14")),
+                   min_semantic_score=float(os.environ.get("IMAGE_MIN_SEMANTIC_SCORE", "0.26")),
+                   min_required_feature_score=float(os.environ.get("IMAGE_MIN_REQUIRED_FEATURE_SCORE", "0.20")),
                    max_excluded_feature_score=float(os.environ.get("IMAGE_MAX_EXCLUDED_FEATURE_SCORE", "0.26")),
                    min_width=max(1, int(os.environ.get("IMAGE_MIN_WIDTH", "480"))),
                    min_height=max(1, int(os.environ.get("IMAGE_MIN_HEIGHT", "270"))),
@@ -369,32 +369,58 @@ class ImageSearchService:
         self.ranker = ranker
         self.feature_evaluator = feature_evaluator
 
-    @staticmethod
-    def build_query(narration, visual_goal):
-        if visual_goal and str(visual_goal).strip():
-            words = re.findall(r"[\w'-]+", str(visual_goal).strip())
-            if words:
-                return " ".join(words[:12])
-        text = re.sub(r"\s+", " ", str(narration or "")).strip()
-        words = re.findall(r"[\w'-]+", text)
-        return " ".join(words[:12])
+    META_PROMPT_WORDS = {
+        "illustration", "illustrations", "depicting", "showing", "side", "comparison",
+        "versus", "vs", "representation", "concept", "metaphor", "analogous", "analogy",
+        "symbolic", "glowing", "hyper-realistic", "photorealistic", "image", "photo",
+        "picture", "drawing", "diagram", "graphic", "render", "3d", "vector",
+        "clipart", "wallpaper", "background", "style", "view", "labeled"
+    }
 
     @staticmethod
-    def refine_query(narration, visual_goal, must_show=None):
+    def _clean_keywords(text: str) -> list[str]:
+        if not text:
+            return []
+        words = re.findall(r"[\w'-]+", str(text))
+        stop_words = {"a", "an", "and", "are", "as", "at", "by", "for", "from", "in",
+                      "is", "it", "of", "on", "or", "that", "the", "this", "to", "with", "inside"}
+        return [w for w in words if w.casefold() not in stop_words and w.casefold() not in ImageSearchService.META_PROMPT_WORDS and len(w) > 1]
+
+    @staticmethod
+    def build_query(narration, visual_goal, topic_name=None):
+        goal_words = ImageSearchService._clean_keywords(visual_goal)
+        topic_words = ImageSearchService._clean_keywords(topic_name) if topic_name else []
+        combined = []
+        for w in topic_words[:3]:
+            if w.casefold() not in [x.casefold() for x in combined]:
+                combined.append(w)
+        for w in goal_words:
+            if w.casefold() not in [x.casefold() for x in combined]:
+                combined.append(w)
+            if len(combined) >= 5:
+                break
+        if combined:
+            return " ".join(combined[:5])
+        narration_words = ImageSearchService._clean_keywords(narration)
+        fallback = (topic_words[:2] + narration_words)[:5]
+        return " ".join(fallback) if fallback else (str(topic_name or narration or "technology")[:30])
+
+    @staticmethod
+    def refine_query(narration, visual_goal, must_show=None, topic_name=None):
         stop_words = {"a", "an", "and", "are", "as", "at", "by", "for", "from", "in",
                       "is", "it", "of", "on", "or", "that", "the", "this", "to", "with"}
         required = ImageSearchService._normalize_features(must_show)
         content_words = [word for word in re.findall(r"[\w'-]+", narration)
-                         if word.casefold() not in stop_words]
-        focus = required or content_words[:12]
-        refined = ImageSearchService.build_query(" ".join(focus), visual_goal)
-        base = ImageSearchService.build_query(narration, visual_goal)
+                         if word.casefold() not in stop_words and word.casefold() not in ImageSearchService.META_PROMPT_WORDS]
+        focus = required or content_words[:5]
+        refined = ImageSearchService.build_query(" ".join(focus), visual_goal, topic_name=topic_name)
+        base = ImageSearchService.build_query(narration, visual_goal, topic_name=topic_name)
         if refined.casefold() == base.casefold():
-            refined = f"{refined} educational photograph"
-        return " ".join(re.findall(r"[\w'-]+", refined)[:32])
+            refined = f"{refined} hardware photo" if topic_name else f"{refined} educational photograph"
+        return refined
 
     def _cache_paths(self, query, provider, constraints_key=""):
-        root = Path(self.config.cache_dir or os.path.join(os.path.dirname(__file__), "..", "cache", "images")).resolve()
+        root = Path(self.config.cache_dir or os.path.join(os.path.dirname(__file__), "..", "..", "cache", "images")).resolve()
         policy = {
             "cache_schema": 3,
             "providers": self.config.providers,
@@ -603,12 +629,12 @@ class ImageSearchService:
             Path(temporary).write_text(json.dumps(record, indent=2), encoding="utf-8")
         return image_path, record
 
-    def find(self, narration, visual_goal, must_show=None, must_not_show=None):
-        query = self.build_query(narration, visual_goal)
+    def find(self, narration, visual_goal, must_show=None, must_not_show=None, topic_name=None):
+        query = self.build_query(narration, visual_goal, topic_name=topic_name)
         must_show, must_not_show = self._validated_constraints(must_show, must_not_show)
         visual_constraints = {"must_show": must_show, "must_not_show": must_not_show}
         attempts, rejected = 0, []
-        refined_query = self.refine_query(narration, visual_goal, must_show)
+        refined_query = self.refine_query(narration, visual_goal, must_show, topic_name=topic_name)
         cached = self._cached(query, "accepted", must_show, must_not_show)
         if cached:
             return cached[0], cached[1], query, attempts, rejected
@@ -644,7 +670,7 @@ class ImageSearchService:
                         break
                     if self.ranker is None:
                         try:
-                            from functions.semantic_visual_matcher import rank_images
+                            from functions.image.semantic_visual_matcher import rank_images
                             ranked = rank_images
                         except Exception as error:
                             rejected.append(f"semantic evaluator unavailable: {error}")
@@ -653,12 +679,14 @@ class ImageSearchService:
                         ranked = self.ranker
                     scores = ranked(query, [str(item[0]) for item in local])
                     score_map = dict(scores)
+                    topic_anchor = f"{topic_name} technical educational photograph" if topic_name else None
+                    topic_scores = dict(ranked(topic_anchor, [str(item[0]) for item in local])) if (topic_anchor and ranked) else {}
                     feature_map = {}
                     all_features = list(dict.fromkeys(must_show + must_not_show))
                     if all_features:
                         if self.feature_evaluator is None:
                             try:
-                                from functions.semantic_visual_matcher import score_visual_features
+                                from functions.image.semantic_visual_matcher import score_visual_features
                                 feature_evaluator = score_visual_features
                             except Exception as error:
                                 rejected.append(f"visual feature evaluator unavailable: {error}")
@@ -672,8 +700,18 @@ class ImageSearchService:
                         except Exception as error:
                             rejected.append(f"visual feature evaluator failed: {error}")
                             break
+                    # Rank candidates by highest combined relevance score first
+                    local.sort(
+                        key=lambda item: (score_map.get(str(item[0]), 0.0) + topic_scores.get(str(item[0]), 0.0))
+                        if topic_anchor else score_map.get(str(item[0]), 0.0),
+                        reverse=True
+                    )
+                    min_topic = max(0.22, self.config.min_semantic_score - 0.04)
                     for path, record in local:
-                        record["semantic_score"] = score_map.get(str(path), 0.0)
+                        sem_score = score_map.get(str(path), 0.0)
+                        top_score = topic_scores.get(str(path), 1.0) if topic_anchor else 1.0
+                        record["semantic_score"] = sem_score
+                        record["topic_score"] = top_score
                         record["search_query"] = search_query
                         scores_for_path = feature_map.get(str(path), {})
                         record["visual_constraints"] = visual_constraints
@@ -686,7 +724,7 @@ class ImageSearchService:
                         features_pass = self._feature_scores_pass(
                             record, must_show, must_not_show,
                         )
-                        if record["semantic_score"] >= self.config.min_semantic_score:
+                        if sem_score >= self.config.min_semantic_score and (topic_anchor is None or top_score >= min_topic):
                             if not features_pass:
                                 rejected.append(f"{name}: required or excluded visual feature check failed")
                                 refine_next = True
@@ -714,7 +752,8 @@ class ImageSearchService:
                             with atomic_output(meta_path) as temporary:
                                 Path(temporary).write_text(json.dumps(record, indent=2), encoding="utf-8")
                             return accepted_image, record, query, attempts, rejected
-                        rejected.append(f"{name}: semantic score below threshold")
+                        rejected.append(f"{name}: semantic or topic score below threshold (semantic={sem_score:.3f}, topic={top_score:.3f})")
+                        refine_next = True
                         refine_next = True
                     if refine_next and attempt + 1 < self.config.max_attempts:
                         continue

@@ -18,9 +18,9 @@ from typing import Optional
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from functions.storyboard_schema import Scene, Storyboard
-from functions.visual_routing import route_storyboard
-from functions.cerebras_client import (
+from functions.script.storyboard_schema import Scene, Storyboard
+from functions.visual.visual_routing import route_storyboard
+from functions.script.cerebras_client import (
     resolve_cerebras_api_key,
     generate_cerebras_completion,
     strip_markdown_code_fences,
@@ -38,7 +38,7 @@ def _resolve_gemini_api_key() -> Optional[str]:
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         keys_file = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "apikeys.json")
+            os.path.join(os.path.dirname(__file__), "..", "..", "apikeys.json")
         )
         if os.path.exists(keys_file):
             try:
@@ -56,7 +56,7 @@ def _resolve_gemini_api_key() -> Optional[str]:
 # Deterministic Fallback Chunker
 # ---------------------------------------------------------------------------
 
-from functions.create_script_function import is_technical_or_algorithmic_topic
+from functions.script.create_script_function import is_technical_or_algorithmic_topic
 
 
 def generate_fallback_storyboard(topic_name: str, script: str) -> Storyboard:
@@ -153,7 +153,7 @@ RULES:
 - Use ONLY facts from the script. Do NOT add unsupported claims.
 - Each scene's narration must be self-contained, speakable prose (no markdown).
 - Include a concise "learning_objective" for what the learner should understand from each scene.
-- visual_query must describe a concrete educational image or diagram, not an abstract phrase.
+- visual_query must be 2 to 4 literal, factual search keywords directly naming the real-world object, hardware component, or concept (e.g. "RTX 4090 graphics card", "GPU cooling heatsink", "computer motherboard"). NEVER use metaphors, analogies (e.g. painting, supercar engines, running shoes), or prompt words like "illustration of", "photorealistic", "side by side comparison". Stock photo libraries fail on metaphors.
 - estimated_seconds should reflect spoken word count (~2.5 words/second).
 - Use "visual_type": "manim" only for a scene that explains BFS, DFS, binary search, linear search, merge sort, or bubble sort.
   Provide a "manim_spec" with the matching "topic_type" ("bfs", "dfs", "binary_search", "linear_search", "merge_sort", or

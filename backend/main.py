@@ -2,9 +2,9 @@ from fastapi import FastAPI, HTTPException, Request, Depends, Header
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
-from functions.cache_utils import find_cached_video, list_all_cached_videos
-from functions.checkpoint_manager import load_checkpoint, get_run_dir, acquire_lock, release_lock
-from functions.dag_evaluator import evaluate_run_dag
+from functions.pipeline.cache_utils import find_cached_video, list_all_cached_videos
+from functions.pipeline.checkpoint_manager import load_checkpoint, get_run_dir, acquire_lock, release_lock
+from functions.pipeline.dag_evaluator import evaluate_run_dag
 from media_store import stream_chunks
 from bson import ObjectId
 import os
@@ -34,7 +34,7 @@ security = HTTPBasic()
 
 async def video_main(*args, **kwargs):
     # Keep the API process light; torch/Manim load only in the rendering process.
-    from functions.video_main_function import video_main as generate
+    from functions.pipeline.video_main_function import video_main as generate
     return await generate(*args, **kwargs)
 
 
@@ -227,7 +227,7 @@ async def stream_run_events(run_id: str):
 
 @app.post("/api/dev/modules/script/test")
 async def dev_test_script(request: Request, authorized: bool = Depends(verify_dev_token)):
-    from functions.create_script_function import create_script
+    from functions.script.create_script_function import create_script
     data = await request.json()
     topic = data.get("topic", "Quantum Computing")
     level = data.get("level", "intermediate")
@@ -236,7 +236,7 @@ async def dev_test_script(request: Request, authorized: bool = Depends(verify_de
 
 @app.post("/api/dev/modules/speech/test")
 async def dev_test_speech(request: Request, authorized: bool = Depends(verify_dev_token)):
-    from functions.create_speech_function import create_speech
+    from functions.audio.create_speech_function import create_speech
     data = await request.json()
     text = data.get("text", "Hello, welcome to this tutorial.")
     character = data.get("character", "Benjamin")
@@ -252,7 +252,7 @@ async def dev_test_speech(request: Request, authorized: bool = Depends(verify_de
 
 @app.post("/api/dev/modules/scrapling/test")
 async def dev_test_scrapling(request: Request, authorized: bool = Depends(verify_dev_token)):
-    from functions.get_image_function import get_image
+    from functions.image.get_image_function import get_image
     data = await request.json()
     query = data.get("query", "Python Programming Logo")
     
@@ -267,8 +267,8 @@ async def dev_test_scrapling(request: Request, authorized: bool = Depends(verify
 @app.post("/api/dev/modules/wav2lip/test")
 @app.post("/api/dev/modules/sadtalker/test")
 async def dev_test_wav2lip(request: Request, authorized: bool = Depends(verify_dev_token)):
-    from functions.create_speech_function import create_speech
-    from functions.create_video_from_audio_function import create_video_from_audio
+    from functions.audio.create_speech_function import create_speech
+    from functions.video.create_video_from_audio_function import create_video_from_audio
     data = await request.json()
     character = data.get("character", "Benjamin")
     force_cpu = data.get("force_cpu", False)
@@ -285,7 +285,7 @@ async def dev_test_wav2lip(request: Request, authorized: bool = Depends(verify_d
 
 @app.post("/api/dev/modules/manim/test")
 async def dev_test_manim(request: Request, authorized: bool = Depends(verify_dev_token)):
-    from functions.manim_renderer import render_scene_manim
+    from functions.video.manim_renderer import render_scene_manim
     data = await request.json() if request.headers.get("content-type") == "application/json" else {}
     topic_type = data.get("topic_type", "bfs")
     scene_title = data.get("scene_title", "BFS Traversal Demo")

@@ -24,7 +24,7 @@ def _resolve_cerebras_key() -> Optional[str]:
     if key:
         return key
 
-    env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env"))
+    env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
     if os.path.exists(env_path):
         try:
             with open(env_path, "r", encoding="utf-8") as f:
@@ -37,7 +37,7 @@ def _resolve_cerebras_key() -> Optional[str]:
         except Exception:
             pass
 
-    keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "apikeys.json"))
+    keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "apikeys.json"))
     if os.path.exists(keys_file):
         try:
             with open(keys_file, "r", encoding="utf-8") as f:
@@ -60,7 +60,7 @@ def _resolve_gemini_key() -> Optional[str]:
     if key and key.strip():
         return key.strip()
 
-    keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "apikeys.json"))
+    keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "apikeys.json"))
     if os.path.exists(keys_file):
         try:
             with open(keys_file, "r", encoding="utf-8") as f:

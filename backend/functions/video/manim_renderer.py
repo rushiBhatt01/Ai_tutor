@@ -13,13 +13,13 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional, Dict, Any, List
 from PIL import Image, ImageDraw, ImageFont, ImageStat
-from functions.visual_artifacts import (
+from functions.visual.visual_artifacts import (
     ImageSource, VisualArtifact, VisualManifest, VisualSpecSummary, VisualValidation, atomic_output,
     file_sha256, load_visual_manifest, probe_visual_video, save_visual_manifest,
     visual_cache_key, visual_scene_fingerprint,
 )
-from functions.visual_spec import trace_search, trace_traversal, trace_bubble_sort, trace_merge_sort
-from functions.visual_acceptance import AttemptBudget, Check, candidate_checks, evaluate_checks
+from functions.visual.visual_spec import trace_search, trace_traversal, trace_bubble_sort, trace_merge_sort
+from functions.visual.visual_acceptance import AttemptBudget, Check, candidate_checks, evaluate_checks
 
 if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     try:
@@ -51,7 +51,7 @@ def _bounded_worker_setting(name, default, minimum, maximum):
 
 def validate_visual_spec_alignment(scenes, visual_specs):
     """Validate spec IDs and route choices before any renderer receives a scene."""
-    from functions.visual_spec import VisualSpec
+    from functions.visual.visual_spec import VisualSpec
 
     spec_by_id = {}
     for raw_spec in visual_specs or []:
@@ -85,7 +85,7 @@ def resolve_manim_python() -> Optional[str]:
         _RESOLVED_MANIM_PYTHON = env_path
         return env_path
 
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
     candidates = [
         os.path.join(repo_root, "manim-test-module", ".venv", "Scripts", "python.exe"),
         os.path.join(repo_root, "backend", ".venv", "Scripts", "python.exe"),
@@ -209,7 +209,7 @@ def generate_dynamic_manim_code(
     Returns the Python source string on success, or None after exhausting retries.
     """
     try:
-        from functions.llm_providers import invoke_with_fallback
+        from functions.script.llm_providers import invoke_with_fallback
     except ImportError:
         print("[Manim Dynamic] LLM provider not available; skipping dynamic generation.")
         return None
@@ -1144,8 +1144,8 @@ def render_all_visual_scenes(run_dir: str, storyboard=None, visual_specs=None) -
       2. Calls create_image_videos to build slide videos for static canvas scenes.
     Returns list of paths to generated video files in image_videos/.
     """
-    from functions.create_image_videos_function import create_image_videos
-    from functions.visual_routing import route_storyboard
+    from functions.video.create_image_videos_function import create_image_videos
+    from functions.visual.visual_routing import route_storyboard
 
     # Rendering is CPU and memory intensive; cap workers even when configuration is large.
     max_workers = visual_worker_limit()
@@ -1153,7 +1153,7 @@ def render_all_visual_scenes(run_dir: str, storyboard=None, visual_specs=None) -
     if storyboard:
         route_storyboard(storyboard)
     if storyboard and visual_specs is None:
-        from functions.langgraph_pipeline import _validated_visual_specs
+        from functions.script.langgraph_pipeline import _validated_visual_specs
         visual_specs = _validated_visual_specs(storyboard)
     scenes = {scene.scene_id: scene for scene in storyboard.scenes} if storyboard else {}
     if storyboard and len(scenes) != len(storyboard.scenes):

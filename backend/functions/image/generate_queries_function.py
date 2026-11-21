@@ -5,7 +5,7 @@ import re
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
-from functions.cerebras_client import (
+from functions.script.cerebras_client import (
     resolve_cerebras_api_key,
     generate_cerebras_completion,
     strip_markdown_code_fences,
@@ -18,7 +18,7 @@ def resolve_gemini_api_key() -> Optional[str]:
     load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
-        keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "apikeys.json"))
+        keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "apikeys.json"))
         if os.path.exists(keys_file):
             try:
                 with open(keys_file, "r", encoding="utf-8") as f:

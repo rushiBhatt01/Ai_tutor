@@ -8,10 +8,10 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 from typing import List, Optional
-from functions.create_speech_function import create_speech
-from functions.get_image_function import get_image
-from functions.generate_queries_function import generate_storyboard_slide_specs
-from functions.visual_artifacts import visual_scene_fingerprint
+from functions.audio.create_speech_function import create_speech
+from functions.image.get_image_function import get_image
+from functions.image.generate_queries_function import generate_storyboard_slide_specs
+from functions.visual.visual_artifacts import visual_scene_fingerprint
 
 
 CATEGORY_CYCLE = [
@@ -45,10 +45,10 @@ def create_audio_image(topic_name, script_or_storyboard, character_name, timesta
         script = script_or_storyboard or ""
 
     if storyboard is None:
-        from functions.create_storyboard_function import generate_fallback_storyboard
+        from functions.script.create_storyboard_function import generate_fallback_storyboard
         storyboard = generate_fallback_storyboard(topic_name, script)
 
-    from functions.visual_routing import route_storyboard
+    from functions.visual.visual_routing import route_storyboard
     route_storyboard(storyboard)
 
     character_dict = {

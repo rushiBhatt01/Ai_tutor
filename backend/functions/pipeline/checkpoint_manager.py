@@ -6,7 +6,7 @@ from deployment_settings import redact_secrets
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-RUNS_DIR = os.path.abspath(os.getenv("RUNS_DIR", os.path.join(os.path.dirname(__file__), "../runs")))
+RUNS_DIR = os.path.abspath(os.getenv("RUNS_DIR", os.path.join(os.path.dirname(__file__), "../../runs")))
 
 PIPELINE_STAGES = [
     "script",

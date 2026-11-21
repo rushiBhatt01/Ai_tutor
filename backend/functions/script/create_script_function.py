@@ -4,7 +4,7 @@ import random
 import re
 from dotenv import load_dotenv
 
-from functions.cerebras_client import (
+from functions.script.cerebras_client import (
     resolve_cerebras_api_key,
     generate_cerebras_completion,
     CEREBRAS_DEFAULT_MODEL,
@@ -182,7 +182,7 @@ def create_script(topic_name, level_of_explanation, age, creativity_level, humou
     # 2. Fallback path: Gemini
     gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not gemini_key:
-        keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "apikeys.json"))
+        keys_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "apikeys.json"))
         if os.path.exists(keys_file):
             try:
                 with open(keys_file, "r", encoding="utf-8") as f:

@@ -10,8 +10,8 @@ from pathlib import Path
 
 from langgraph.graph import END, START, StateGraph
 
-from functions.storyboard_schema import Storyboard
-from functions.visual_artifacts import load_visual_manifest
+from functions.script.storyboard_schema import Storyboard
+from functions.visual.visual_artifacts import load_visual_manifest
 
 
 class VisualPipelineState(TypedDict, total=False):
@@ -29,8 +29,8 @@ def plan_visuals(state: VisualPipelineState) -> dict:
     if storyboard is None and state.get("storyboard_json"):
         storyboard = Storyboard.model_validate_json(state["storyboard_json"])
     if storyboard is not None:
-        from functions.visual_routing import route_storyboard
-        from functions.langgraph_pipeline import _validated_visual_specs
+        from functions.visual.visual_routing import route_storyboard
+        from functions.script.langgraph_pipeline import _validated_visual_specs
 
         route_storyboard(storyboard)
         specs = _validated_visual_specs(storyboard)
@@ -42,7 +42,7 @@ def plan_visuals(state: VisualPipelineState) -> dict:
 
 
 def dispatch_visuals(state: VisualPipelineState) -> dict:
-    from functions.manim_renderer import render_all_visual_scenes
+    from functions.video.manim_renderer import render_all_visual_scenes
 
     paths = render_all_visual_scenes(
         state["run_dir"], storyboard=state.get("storyboard"),

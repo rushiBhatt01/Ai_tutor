@@ -23,14 +23,14 @@ from typing import TypedDict, Optional, List, Dict, Any, Annotated
 from langgraph.graph import StateGraph, START, END
 from langchain_core.messages import SystemMessage, HumanMessage
 
-from functions.llm_providers import invoke_with_fallback
-from functions.create_script_function import sanitize_script_for_tts
-from functions.storyboard_schema import Storyboard, Scene
-from functions.create_storyboard_function import (
+from functions.script.llm_providers import invoke_with_fallback
+from functions.script.create_script_function import sanitize_script_for_tts
+from functions.script.storyboard_schema import Storyboard, Scene
+from functions.script.create_storyboard_function import (
     generate_fallback_storyboard,
     _parse_and_validate,
 )
-from functions.cerebras_client import strip_markdown_code_fences
+from functions.script.cerebras_client import strip_markdown_code_fences
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ def classify_topic(state: PipelineState) -> dict:
     except Exception as e:
         print(f"[LangGraph] [WARN] Classification failed ({e}), falling back to regex patterns")
         # Fallback to the original regex-based detection
-        from functions.create_script_function import is_technical_or_algorithmic_topic
+        from functions.script.create_script_function import is_technical_or_algorithmic_topic
         is_tech = is_technical_or_algorithmic_topic(topic)
         if is_tech:
             lower = topic.lower()
@@ -418,7 +418,7 @@ RULES:
 - Split the script into 3 to 8 scenes. Preserve the script's teaching order.
 - Use ONLY facts from the script. Do NOT add unsupported claims.
 - Each scene's narration must be self-contained, speakable prose (no markdown).
-- visual_query must describe a concrete educational image or diagram.
+- visual_query must be 2 to 4 literal, factual search keywords directly naming the real-world object, hardware component, or concept (e.g. "RTX 4090 graphics card", "GPU cooling heatsink", "computer motherboard"). NEVER use metaphors, analogies (e.g. painting, supercar engines), or prompt words like "illustration of", "photorealistic". Stock photo libraries fail on metaphors.
 - estimated_seconds should reflect spoken word count (~2.5 words/second).
 {manim_instruction}
 
@@ -596,7 +596,7 @@ def build_script_graph() -> StateGraph:
 
 def plan_visuals(state: PipelineState) -> dict:
     """Persist per-scene route decisions in graph state after storyboard validation."""
-    from functions.visual_routing import route_storyboard
+    from functions.visual.visual_routing import route_storyboard
 
     storyboard = Storyboard.model_validate_json(state["storyboard_json"])
     route_storyboard(storyboard)
@@ -616,7 +616,7 @@ def plan_visuals(state: PipelineState) -> dict:
 
 def _validated_visual_specs(storyboard: Storyboard) -> List[Dict[str, Any]]:
     """Build the shared VisualSpec contract from routed storyboard scenes."""
-    from functions.visual_spec import validate_visual_spec
+    from functions.visual.visual_spec import validate_visual_spec
 
     specs = []
     for scene in storyboard.scenes:
